@@ -53,24 +53,24 @@ const db = getFirestore(app);
 const workspaceDocRef = doc(db, 'workspaces', 'team_cue_main');
 
 const TEAM_MEMBERS = [
-  { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', status: 'online', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com' },
-  { id: 'rand', name: 'رند محمد الرميخان', role: 'Co-founder | Management Team | Art Department', status: 'online', avatar: '', phone: '0554095903', email: 'rrand.msa@gmail.com' },
-  { id: 'ibrahim', name: 'إبراهيم المطرفي', role: 'Management Team | Head of Production Department', status: 'online', avatar: '', phone: '0560057562', email: 'i.almatrafi.cue@gmail.com' },
-  { id: 'abdulaziz', name: 'عبدالعزيز المعاوي', role: 'Management Team | Head of Directing Department', status: 'online', avatar: '', phone: '0554760134', email: 'ajqvvv@gmail.com' },
-  { id: 'joud', name: 'جود فهد الغامدي', role: 'Management Team | Directing Department', status: 'online', avatar: '', phone: '0555776788', email: 'joudiwooow@gmail.com' },
-  { id: 'khalid', name: 'خالد عبدالله الجمحان', role: 'Production Department', status: 'online', avatar: '', phone: '0564099683', email: 'khalid.al-jamhan@sadufilms.com' },
-  { id: 'abdulmalik_d', name: 'عبدالملك الداوود', role: 'Production Department', status: 'online', avatar: '', phone: '0562881333', email: 'aldaudabdul@gmail.com' },
-  { id: 'tariq', name: 'طارق عبدالله الدوسري', role: 'Production Department', status: 'online', avatar: '', phone: '0509272230', email: 'Triq091d@gmail.com' },
-  { id: 'abdullatif', name: 'عبداللطيف المسعود', role: 'Production Department', status: 'online', avatar: '', phone: '0510545538', email: 'bdalltyfalmy@gmail.com' },
-  { id: 'layan', name: 'ليان سعد الغامدي', role: 'Production Department | Art Department', status: 'online', avatar: '', phone: '0569137875', email: 'layanssaadd11@gmail.com' },
-  { id: 'abbad', name: 'عباد العتيبي', role: 'Directing Department', status: 'online', avatar: '', phone: '0555552162', email: 'abad.alraqas@gmail.com' },
-  { id: 'ghazi', name: 'غازي الكندي', role: 'Directing Department | Art Department', status: 'online', avatar: '', phone: '0535553792', email: 'hhq477@gmail.com' },
-  { id: 'haya', name: 'هيا العيسى', role: 'Directing Department', status: 'online', avatar: '', phone: '0559527692', email: 'Haya.11.alessa@gmail.com' },
-  { id: 'faisal', name: 'فيصل الجميعه', role: 'Art Department', status: 'online', avatar: '', phone: '0555470681', email: '1414faisalahmad@gmail.com' },
-  { id: 'abdulmalik_m', name: 'عبدالملك المعيقل', role: 'Art Department', status: 'online', avatar: '', phone: '0536128116', email: 'mlok.fg87@gmail.com' },
-  { id: 'mohammed_s', name: 'محمد ال شفلوت', role: 'Art Department', status: 'online', avatar: '', phone: '0501205773', email: 'm7md.ali.077@gmail.com' },
-  { id: 'mohammed_d', name: 'محمد الدامر', role: 'Art Department', status: 'online', avatar: '', phone: '0570750748', email: 'dammhmd049@gmail.com' },
-  { id: 'leen', name: 'لين محمد الغامدي', role: 'Art Department', status: 'online', avatar: '', phone: '0549811426', email: 'ileen17m@gmail.com' }
+  { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com' },
+  { id: 'rand', name: 'رند محمد الرميخان', role: 'Co-founder | Management Team | Art Department', avatar: '', phone: '0554095903', email: 'rrand.msa@gmail.com' },
+  { id: 'ibrahim', name: 'إبراهيم المطرفي', role: 'Management Team | Head of Production Department', avatar: '', phone: '0560057562', email: 'i.almatrafi.cue@gmail.com' },
+  { id: 'abdulaziz', name: 'عبدالعزيز المعاوي', role: 'Management Team | Head of Directing Department', avatar: '', phone: '0554760134', email: 'ajqvvv@gmail.com' },
+  { id: 'joud', name: 'جود فهد الغامدي', role: 'Management Team | Directing Department', avatar: '', phone: '0555776788', email: 'joudiwooow@gmail.com' },
+  { id: 'khalid', name: 'خالد عبدالله الجمحان', role: 'Production Department', avatar: '', phone: '0564099683', email: 'khalid.al-jamhan@sadufilms.com' },
+  { id: 'abdulmalik_d', name: 'عبدالملك الداوود', role: 'Production Department', avatar: '', phone: '0562881333', email: 'aldaudabdul@gmail.com' },
+  { id: 'tariq', name: 'طارق عبدالله الدوسري', role: 'Production Department', avatar: '', phone: '0509272230', email: 'Triq091d@gmail.com' },
+  { id: 'abdullatif', name: 'عبداللطيف المسعود', role: 'Production Department', avatar: '', phone: '0510545538', email: 'bdalltyfalmy@gmail.com' },
+  { id: 'layan', name: 'ليان سعد الغامدي', role: 'Production Department | Art Department', avatar: '', phone: '0569137875', email: 'layanssaadd11@gmail.com' },
+  { id: 'abbad', name: 'عباد العتيبي', role: 'Directing Department', avatar: '', phone: '0555552162', email: 'abad.alraqas@gmail.com' },
+  { id: 'ghazi', name: 'غازي الكندي', role: 'Directing Department | Art Department', avatar: '', phone: '0535553792', email: 'hhq477@gmail.com' },
+  { id: 'haya', name: 'هيا العيسى', role: 'Directing Department', avatar: '', phone: '0559527692', email: 'Haya.11.alessa@gmail.com' },
+  { id: 'faisal', name: 'فيصل الجميعه', role: 'Art Department', avatar: '', phone: '0555470681', email: '1414faisalahmad@gmail.com' },
+  { id: 'abdulmalik_m', name: 'عبدالملك المعيقل', role: 'Art Department', avatar: '', phone: '0536128116', email: 'mlok.fg87@gmail.com' },
+  { id: 'mohammed_s', name: 'محمد ال شفلوت', role: 'Art Department', avatar: '', phone: '0501205773', email: 'm7md.ali.077@gmail.com' },
+  { id: 'mohammed_d', name: 'محمد الدامر', role: 'Art Department', avatar: '', phone: '0570750748', email: 'dammhmd049@gmail.com' },
+  { id: 'leen', name: 'لين محمد الغامدي', role: 'Art Department', avatar: '', phone: '0549811426', email: 'ileen17m@gmail.com' }
 ];
 
 const CHANNELS = [
@@ -140,8 +140,11 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // حالات تعيين / تغيير الرمز السري الشخصي
+  // كلمات المرور والحضور التلقائي الحي
   const [userPasswords, setUserPasswords] = useState({});
+  const [onlinePresence, setOnlinePresence] = useState({});
+  const [nowTick, setNowTick] = useState(Date.now());
+
   const [newPasswordInput, setNewPasswordInput] = useState('');
   const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
   const [passwordSetupError, setPasswordSetupError] = useState('');
@@ -220,6 +223,7 @@ export default function App() {
           if (data.projects !== undefined) setProjects(data.projects);
           if (data.channelMembers !== undefined) setChannelMembers(data.channelMembers);
           if (data.userPasswords !== undefined) setUserPasswords(data.userPasswords);
+          if (data.onlinePresence !== undefined) setOnlinePresence(data.onlinePresence);
         } else {
           setDoc(workspaceDocRef, {
             messages: [],
@@ -229,6 +233,7 @@ export default function App() {
             assets: [],
             channelMembers: {},
             userPasswords: {},
+            onlinePresence: {},
             lastUpdated: Date.now()
           });
         }
@@ -242,6 +247,58 @@ export default function App() {
 
     return () => unsubscribe();
   }, []);
+
+  // مؤقت تحديث الواجهة كل 15 ثانية للتحقق من حالة تواجد الأعضاء تلقائياً
+  useEffect(() => {
+    const clockInterval = setInterval(() => {
+      setNowTick(Date.now());
+    }, 15000);
+    return () => clearInterval(clockInterval);
+  }, []);
+
+  // إرسال نبضة التواجد التلقائية إلى Firestore عند دخول العضو وكل 25 ثانية
+  useEffect(() => {
+    if (!currentUser) return;
+
+    const sendHeartbeat = async () => {
+      const now = Date.now();
+      setOnlinePresence((prev) => ({ ...prev, [currentUser.id]: now }));
+      try {
+        await setDoc(
+          workspaceDocRef,
+          { onlinePresence: { [currentUser.id]: now } },
+          { merge: true }
+        );
+      } catch (err) {
+        console.error('Presence update failed:', err);
+      }
+    };
+
+    sendHeartbeat();
+    const hbInterval = setInterval(sendHeartbeat, 25000);
+
+    const handleBeforeUnload = () => {
+      setDoc(
+        workspaceDocRef,
+        { onlinePresence: { [currentUser.id]: 0 } },
+        { merge: true }
+      ).catch(() => {});
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => {
+      clearInterval(hbInterval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [currentUser]);
+
+  // دالة للتحقق التلقائي هل العضو متواجد الآن (نشط خلال آخر 65 ثانية)
+  const isMemberOnline = (memberId) => {
+    if (currentUser && currentUser.id === memberId) return true;
+    const lastSeen = onlinePresence[memberId];
+    if (!lastSeen) return false;
+    return nowTick - lastSeen < 65000;
+  };
 
   useEffect(() => {
     if (!currentUser || !activeChannel) return;
@@ -467,7 +524,6 @@ export default function App() {
     updateGlobalStore({ callSheets: nextCs });
   };
 
-  // تسجيل الدخول والتحقق من الرمز الشخصي أو الافتراضي
   const handleLogin = (e) => {
     e.preventDefault();
     setLoginError('');
@@ -492,7 +548,6 @@ export default function App() {
       return;
     }
 
-    // إذا كان العضو لا يزال يستخدم الرمز الافتراضي، نطلب منه تعيين رمز خاص به فوراً
     if (!savedCustomPassword) {
       setPendingUser(foundUser);
       setNewPasswordInput('');
@@ -504,7 +559,6 @@ export default function App() {
     setCurrentUser(foundUser);
   };
 
-  // حفظ الرمز الشخصي الجديد للعضو
   const handleSavePersonalPassword = async (e) => {
     e.preventDefault();
     setPasswordSetupError('');
@@ -543,7 +597,6 @@ export default function App() {
     }
   };
 
-  // إعادة ضبط رمز عضو للرمز الافتراضي (متاح للإدارة فقط في حال نسيان الرمز)
   const handleResetMemberPassword = async (memberId, memberName) => {
     if (!isManagementUser) return;
     const updatedPasswords = { ...userPasswords };
@@ -553,7 +606,18 @@ export default function App() {
     alert(`تمت إعادة ضبط رمز (${memberName}) للرمز الافتراضي، وسيُطلب منه تعيين رمز جديد عند دخوله القادم.`);
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    if (currentUser) {
+      const leavingId = currentUser.id;
+      setOnlinePresence((prev) => ({ ...prev, [leavingId]: 0 }));
+      try {
+        await setDoc(
+          workspaceDocRef,
+          { onlinePresence: { [leavingId]: 0 } },
+          { merge: true }
+        );
+      } catch {}
+    }
     setCurrentUser(null);
     setPendingUser(null);
     setLoginEmail('');
@@ -565,8 +629,8 @@ export default function App() {
   const activeMembersInChannel = channelMembers[activeChannel] || [];
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const projectAssets = assets.filter((a) => a.projectId === selectedProjectId);
+  const onlineCount = TEAM_MEMBERS.filter((m) => isMemberOnline(m.id)).length;
 
-  // شاشة تعيين الرمز الشخصي عند أول دخول
   if (pendingUser) {
     return (
       <div className="flex min-h-screen bg-slate-950 text-slate-100 items-center justify-center p-4 dir-rtl" dir="rtl">
@@ -743,12 +807,17 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('team')}
-              className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'team' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <Users className="w-4 h-4" />
-              <span>أعضاء الفريق</span>
+              <div className="flex items-center space-x-3 space-x-reverse">
+                <Users className="w-4 h-4" />
+                <span>أعضاء الفريق</span>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold">
+                {onlineCount} متصل
+              </span>
             </button>
           </nav>
         </div>
@@ -793,7 +862,7 @@ export default function App() {
               {activeTab === 'chat' && 'غرف التواصل ومهام الأقسام'}
               {activeTab === 'callsheet' && 'أجندة يوم التصوير والمواقع'}
               {activeTab === 'assets' && 'مكتبة الفريق والأعمال'}
-              {activeTab === 'team' && 'دليل أفراد تيم كيو'}
+              {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد الآن)`}
             </h2>
           </div>
 
@@ -886,20 +955,23 @@ export default function App() {
 
                   <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-800/60">
                     <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Users className="w-3 h-3 text-emerald-400" /> المتواجدون بالقسم:
+                      <Users className="w-3 h-3 text-emerald-400" /> أعضاء القسم:
                     </span>
                     {activeMembersInChannel.length === 0 ? (
                       <span className="text-[11px] text-slate-500">لا يوجد أعضاء مسجلون بعد</span>
                     ) : (
-                      activeMembersInChannel.map((member) => (
-                        <span
-                          key={member.id}
-                          className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-200 border border-slate-700/80 flex items-center gap-1"
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
-                          {member.name}
-                        </span>
-                      ))
+                      activeMembersInChannel.map((member) => {
+                        const online = isMemberOnline(member.id);
+                        return (
+                          <span
+                            key={member.id}
+                            className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-200 border border-slate-700/80 flex items-center gap-1"
+                          >
+                            <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
+                            {member.name}
+                          </span>
+                        );
+                      })
                     )}
                   </div>
                 </div>
@@ -1510,19 +1582,27 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {TEAM_MEMBERS.map((member) => {
                 const hasCustomPass = Boolean(userPasswords[member.id]);
+                const online = isMemberOnline(member.id);
                 return (
                   <div key={member.id} className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between space-y-4">
                     <div className="flex items-center space-x-3 space-x-reverse">
-                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
-                        {member.name.charAt(0)}
+                      <div className="relative">
+                        <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
+                          {member.name.charAt(0)}
+                        </div>
+                        <span
+                          className={`absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${
+                            online ? 'bg-emerald-400' : 'bg-slate-600'
+                          }`}
+                        ></span>
                       </div>
                       <div className="flex-1">
                         <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
                         <p className="text-xs text-amber-400 font-medium">{member.role}</p>
-                        <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
-                            <span>متواجد الآن</span>
+                        <div className="mt-1 flex items-center gap-2 text-[10px]">
+                          <span className={`flex items-center gap-1 font-semibold ${online ? 'text-emerald-400' : 'text-slate-500'}`}>
+                            <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
+                            <span>{online ? 'متواجد الآن' : 'غير متصل'}</span>
                           </span>
                           <span className={`px-1.5 py-0.2 rounded ${hasCustomPass ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
                             {hasCustomPass ? 'رمز خاص مفعّل' : 'رمز افتراضي'}
@@ -1557,7 +1637,6 @@ export default function App() {
           )}
         </div>
 
-        {/* نافذة تغيير الرمز الشخصي من داخل المنصة */}
         {showChangePasswordModal && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
