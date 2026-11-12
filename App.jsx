@@ -34,11 +34,13 @@ import {
   FolderPlus,
   KeyRound,
   RotateCcw,
-  MessageCircle
+  MessageCircle,
+  UserPlus
 } from 'lucide-react';
 
 const TEAM_LOGO_URL = teamLogo;
 const DEFAULT_PASSWORD = 'cue2026';
+const TEAM_INVITE_CODE = 'CUE2026';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB4oVmgfNYFTxhajHnmtBtGXCPE80wTdEI",
@@ -53,7 +55,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const workspaceDocRef = doc(db, 'workspaces', 'team_cue_main');
 
-const TEAM_MEMBERS = [
+const INITIAL_TEAM_MEMBERS = [
   { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', status: 'online', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com' },
   { id: 'rand', name: 'رند محمد الرميخان', role: 'Co-founder | Management Team | Art Department', status: 'online', avatar: '', phone: '0554095903', email: 'rrand.msa@gmail.com' },
   { id: 'ibrahim', name: 'إبراهيم المطرفي', role: 'Management Team | Head of Production Department', status: 'online', avatar: '', phone: '0560057562', email: 'i.almatrafi.cue@gmail.com' },
@@ -112,7 +114,6 @@ const INITIAL_PROJECTS = [
   }
 ];
 
-// إنشاء معرّف موحّد وثابت للمحادثة الثنائية بين أي عضوين
 function getDirectChannelId(userAId, userBId) {
   const sorted = [userAId, userBId].sort();
   return `dm_${sorted[0]}_${sorted[1]}`;
@@ -143,9 +144,20 @@ function TeamLogo({ size = 'md' }) {
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [pendingUser, setPendingUser] = useState(null);
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+
+  // حالات تسجيل عضو جديد
+  const [customMembers, setCustomMembers] = useState([]);
+  const [regName, setRegName] = useState('');
+  const [regRole, setRegRole] = useState('Art Department');
+  const [regPhone, setRegPhone] = useState('');
+  const [regEmail, setRegEmail] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regInviteCode, setRegInviteCode] = useState('');
+  const [regError, setRegError] = useState('');
 
   const [userPasswords, setUserPasswords] = useState({});
   const [onlinePresence, setOnlinePresence] = useState({});
@@ -209,6 +221,9 @@ export default function App() {
   const [enteredPasscode, setEnteredPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
 
+  // دمج الأعضاء الأساسيين مع الأعضاء الجدد المسجلين سحابياً
+  const allTeamMembers = [...INITIAL_TEAM_MEMBERS, ...customMembers];
+
   useEffect(() => {
     try {
       localStorage.setItem('cue_unlocked_channels', JSON.stringify(unlockedChannels));
@@ -231,6 +246,7 @@ export default function App() {
           if (data.channelMembers !== undefined) setChannelMembers(data.channelMembers);
           if (data.userPasswords !== undefined) setUserPasswords(data.userPasswords);
           if (data.onlinePresence !== undefined) setOnlinePresence(data.onlinePresence);
+          if (data.customMembers !== undefined) setCustomMembers(data.customMembers);
         } else {
           setDoc(workspaceDocRef, {
             messages: [],
@@ -241,6 +257,7 @@ export default function App() {
             channelMembers: {},
             userPasswords: {},
             onlinePresence: {},
+            customMembers: [],
             lastUpdated: Date.now()
           });
         }
@@ -330,6 +347,7 @@ export default function App() {
       assets: newPartialState.assets !== undefined ? newPartialState.assets : assets,
       channelMembers: newPartialState.channelMembers !== undefined ? newPartialState.channelMembers : channelMembers,
       userPasswords: newPartialState.userPasswords !== undefined ? newPartialState.userPasswords : userPasswords,
+      customMembers: newPartialState.customMembers !== undefined ? newPartialState.customMembers : customMembers,
       lastUpdated: Date.now()
     };
     try {
@@ -341,7 +359,89 @@ export default function App() {
 
   const isManagementUser = currentUser?.role?.includes('Management Team');
 
-  // فتح محادثة خاصة مباشرة مع عضو محدد
+  // تسجيل عضو جديد بنفسه
+  const handleSelfRegister = async (e) => {
+    e.preventDefault();
+    setRegError('');
+
+    if (!isCloudLoaded) {
+      setRegError('جاري الاتصال بالسحابة... انتظر ثانية ثم اضغط تسجيل.');
+      return;
+    }
+
+    const cleanName = regName.trim();
+    const cleanEmail = regEmail.trim().toLowerCase();
+    const cleanPhone = regPhone.trim();
+    const cleanPass = regPassword.trim();
+    const cleanInvite = regInviteCode.trim().toUpperCase();
+
+    if (cleanInvite !== TEAM_INVITE_CODE) {
+      setRegError('رمز دعوة الفريق غير صحيح. اطلب الرمز من إدارة Team .Cue.');
+      return;
+    }
+    if (cleanName.length < 3) {
+      setRegError('يرجى كتابة الاسم الكامل بشكل صحيح.');
+      return;
+    }
+    if (cleanPass.length < 4) {
+      setRegError('يجب أن يتكون الرمز السري من 4 خانات على الأقل.');
+      return;
+    }
+
+    const emailExists = allTeamMembers.some((m) => m.email.toLowerCase() === cleanEmail);
+    if (emailExists) {
+      setRegError('هذا البريد الإلكتروني مسجل مسبقاً! يمكنك تسجيل الدخول مباشرة.');
+      return;
+    }
+
+    const newMemberId = 'member_' + Date.now();
+    const newMember = {
+      id: newMemberId,
+      name: cleanName,
+      role: regRole,
+      status: 'online',
+      avatar: '',
+      phone: cleanPhone || 'غير مضاف',
+      email: cleanEmail,
+      isCustom: true
+    };
+
+    const updatedCustomMembers = [...customMembers, newMember];
+    const updatedPasswords = {
+      ...userPasswords,
+      [newMemberId]: cleanPass
+    };
+
+    setCustomMembers(updatedCustomMembers);
+    setUserPasswords(updatedPasswords);
+
+    await updateGlobalStore({
+      customMembers: updatedCustomMembers,
+      userPasswords: updatedPasswords
+    });
+
+    setRegName('');
+    setRegPhone('');
+    setRegEmail('');
+    setRegPassword('');
+    setRegInviteCode('');
+    setAuthMode('login');
+    setCurrentUser(newMember);
+  };
+
+  const handleDeleteCustomMember = async (memberId, memberName) => {
+    if (!isManagementUser) return;
+    const updatedCustomMembers = customMembers.filter((m) => m.id !== memberId);
+    const updatedPasswords = { ...userPasswords };
+    delete updatedPasswords[memberId];
+    setCustomMembers(updatedCustomMembers);
+    setUserPasswords(updatedPasswords);
+    await updateGlobalStore({
+      customMembers: updatedCustomMembers,
+      userPasswords: updatedPasswords
+    });
+  };
+
   const handleStartDirectChat = (targetMember) => {
     if (!currentUser || targetMember.id === currentUser.id) return;
     const dmChannelId = getDirectChannelId(currentUser.id, targetMember.id);
@@ -549,10 +649,10 @@ export default function App() {
     }
 
     const cleanEmail = (loginEmail || '').trim().toLowerCase();
-    const foundUser = TEAM_MEMBERS.find((m) => m.email.toLowerCase() === cleanEmail);
+    const foundUser = allTeamMembers.find((m) => m.email.toLowerCase() === cleanEmail);
 
     if (!foundUser) {
-      setLoginError('البريد الإلكتروني غير مسجل في قائمة تيم كيو.');
+      setLoginError('البريد الإلكتروني غير مسجل. إذا كنت عضواً جديداً اضغط على "سجّل حسابك الآن" بالأسفل.');
       return;
     }
 
@@ -642,12 +742,11 @@ export default function App() {
 
   const isDirectMessage = activeChannel.startsWith('dm_');
   const dmPartner = isDirectMessage && currentUser
-    ? TEAM_MEMBERS.find((m) => m.id !== currentUser.id && activeChannel === getDirectChannelId(currentUser.id, m.id))
+    ? allTeamMembers.find((m) => m.id !== currentUser.id && activeChannel === getDirectChannelId(currentUser.id, m.id))
     : null;
 
-  // جمع قائمة الأعضاء الذين بينك وبينهم محادثات خاصة (سواء أُرسلت رسائل أو فُتحت للتو)
   const dmPartnerList = currentUser
-    ? TEAM_MEMBERS.filter((m) => {
+    ? allTeamMembers.filter((m) => {
         if (m.id === currentUser.id) return false;
         const dmId = getDirectChannelId(currentUser.id, m.id);
         const hasMessages = messages.some((msg) => msg.channelId === dmId);
@@ -660,7 +759,7 @@ export default function App() {
   const activeMembersInChannel = channelMembers[activeChannel] || [];
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const projectAssets = assets.filter((a) => a.projectId === selectedProjectId);
-  const onlineCount = TEAM_MEMBERS.filter((m) => isMemberOnline(m.id)).length;
+  const onlineCount = allTeamMembers.filter((m) => isMemberOnline(m.id)).length;
 
   if (pendingUser) {
     return (
@@ -736,53 +835,172 @@ export default function App() {
             <TeamLogo size="lg" />
             <h1 className="text-2xl font-bold text-amber-400">Team .Cue</h1>
             <p className="text-sm font-semibold text-amber-300/90">هنا نصنع الإبداع</p>
-            <p className="text-[11px] text-slate-400">منصة المزامنة الحية الموحدة للفريق</p>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">البريد الإلكتروني المعتمد:</label>
-              <input
-                type="email"
-                required
-                value={loginEmail}
-                onChange={(e) => setLoginEmail(e.target.value)}
-                placeholder="أدخل بريدك الإلكتروني"
-                className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري الخاص بك:</label>
-              <input
-                type="password"
-                required
-                value={loginPassword}
-                onChange={(e) => setLoginPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
-              />
-            </div>
-
-            {loginError && (
-              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
-                {loginError}
-              </div>
-            )}
-
-            <button
-              type="submit"
-              className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm transition-colors shadow-lg shadow-amber-500/10"
-            >
-              تسجيل الدخول إلى حسابك
-            </button>
-          </form>
-
-          <div className="text-center border-t border-slate-800 pt-4">
-            <p className="text-[11px] text-slate-500">
-              كل عضو يمتلك رمزاً سرياً مستقلاً لحماية حسابه
+            <p className="text-[11px] text-slate-400">
+              {authMode === 'login' ? 'منصة المزامنة الحية الموحدة للفريق' : 'إنشاء حساب عضو جديد في الفريق'}
             </p>
           </div>
+
+          {authMode === 'login' ? (
+            <>
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">البريد الإلكتروني المعتمد:</label>
+                  <input
+                    type="email"
+                    required
+                    value={loginEmail}
+                    onChange={(e) => setLoginEmail(e.target.value)}
+                    placeholder="أدخل بريدك الإلكتروني"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري الخاص بك:</label>
+                  <input
+                    type="password"
+                    required
+                    value={loginPassword}
+                    onChange={(e) => setLoginPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
+                  />
+                </div>
+
+                {loginError && (
+                  <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
+                    {loginError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm transition-colors shadow-lg shadow-amber-500/10"
+                >
+                  تسجيل الدخول إلى حسابك
+                </button>
+              </form>
+
+              <div className="text-center border-t border-slate-800 pt-4 space-y-2">
+                <p className="text-xs text-slate-400">عضو جديد في Team .Cue؟</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('register');
+                    setLoginError('');
+                    setRegError('');
+                  }}
+                  className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl text-xs border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  <span>سجّل معلوماتك وأنشئ حسابك الآن</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <form onSubmit={handleSelfRegister} className="space-y-3.5">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">الاسم الكامل (الثلاثي):</label>
+                <input
+                  type="text"
+                  required
+                  value={regName}
+                  onChange={(e) => setRegName(e.target.value)}
+                  placeholder="مثال: سعد عبدالله العتيبي"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">القسم / التخصص:</label>
+                <select
+                  value={regRole}
+                  onChange={(e) => setRegRole(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                >
+                  <option value="Art Department">Art Department (قسم الديكور والفن)</option>
+                  <option value="Production Department">Production Department (قسم الإنتاج)</option>
+                  <option value="Directing Department">Directing Department (قسم الإخراج)</option>
+                  <option value="Post-Production Department">Post-Production Department (قسم المونتاج)</option>
+                  <option value="Cinematography Department">Cinematography Department (التصوير والإضاءة)</option>
+                </select>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">رقم الجوال:</label>
+                  <input
+                    type="tel"
+                    required
+                    value={regPhone}
+                    onChange={(e) => setRegPhone(e.target.value)}
+                    placeholder="05XXXXXXXX"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">رمز دعوة الفريق:</label>
+                  <input
+                    type="text"
+                    required
+                    value={regInviteCode}
+                    onChange={(e) => setRegInviteCode(e.target.value)}
+                    placeholder="اطلبه من الإدارة"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500 uppercase"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">البريد الإلكتروني:</label>
+                <input
+                  type="email"
+                  required
+                  value={regEmail}
+                  onChange={(e) => setRegEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">اختر رمزك السري الخاص للدخول:</label>
+                <input
+                  type="password"
+                  required
+                  value={regPassword}
+                  onChange={(e) => setRegPassword(e.target.value)}
+                  placeholder="4 خانات على الأقل..."
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                />
+              </div>
+
+              {regError && (
+                <div className="p-2.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
+                  {regError}
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('login');
+                    setRegError('');
+                  }}
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                >
+                  لديك حساب؟ دخول
+                </button>
+                <button
+                  type="submit"
+                  className="flex-[2] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                >
+                  إنشاء الحساب والدخول
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </div>
     );
@@ -893,11 +1111,16 @@ export default function App() {
               {activeTab === 'chat' && (isDirectMessage && dmPartner ? `محادثة خاصة مع ${dmPartner.name}` : 'غرف التواصل ومهام الأقسام')}
               {activeTab === 'callsheet' && 'أجندة يوم التصوير والمواقع'}
               {activeTab === 'assets' && 'مكتبة الفريق والأعمال'}
-              {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد الآن)`}
+              {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد من ${allTeamMembers.length})`}
             </h2>
           </div>
 
           <div className="flex items-center gap-2">
+            {isManagementUser && activeTab === 'team' && (
+              <span className="text-[11px] px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-full font-mono">
+                رمز دعوة الأعضاء: {TEAM_INVITE_CODE}
+              </span>
+            )}
             <span className="text-[11px] px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1.5 font-semibold">
               <Cloud className="w-3.5 h-3.5" /> {syncStatus}
             </span>
@@ -947,7 +1170,6 @@ export default function App() {
                   </div>
                 </div>
 
-                {/* قائمة المحادثات الخاصة الفردية */}
                 <div className="border-t border-slate-800 pt-3">
                   <div className="flex items-center justify-between px-2 mb-2">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">المحادثات الخاصة</h3>
@@ -1696,7 +1918,7 @@ export default function App() {
 
           {activeTab === 'team' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {TEAM_MEMBERS.map((member) => {
+              {allTeamMembers.map((member) => {
                 const hasCustomPass = Boolean(userPasswords[member.id]);
                 const online = isMemberOnline(member.id);
                 const isSelf = currentUser.id === member.id;
@@ -1714,7 +1936,14 @@ export default function App() {
                         ></span>
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
+                          {member.isCustom && (
+                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
+                              جديد
+                            </span>
+                          )}
+                        </div>
                         <p className="text-xs text-amber-400 font-medium">{member.role}</p>
                         <div className="mt-1 flex items-center gap-2 text-[10px]">
                           <span className={`flex items-center gap-1 font-semibold ${online ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -1748,14 +1977,28 @@ export default function App() {
                         </button>
                       )}
 
-                      {isManagementUser && hasCustomPass && (
-                        <button
-                          onClick={() => handleResetMemberPassword(member.id, member.name)}
-                          className="w-full mt-1.5 py-1.5 bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 rounded-lg text-[11px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
-                        >
-                          <RotateCcw className="w-3 h-3" />
-                          <span>إعادة ضبط الرمز السري (إذا نسيه)</span>
-                        </button>
+                      {isManagementUser && (
+                        <div className="flex gap-1.5 pt-1">
+                          {hasCustomPass && (
+                            <button
+                              onClick={() => handleResetMemberPassword(member.id, member.name)}
+                              className="flex-1 py-1.5 bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 rounded-lg text-[10px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1"
+                            >
+                              <RotateCcw className="w-3 h-3" />
+                              <span>إعادة ضبط الرمز</span>
+                            </button>
+                          )}
+                          {member.isCustom && (
+                            <button
+                              onClick={() => handleDeleteCustomMember(member.id, member.name)}
+                              className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-[10px] font-medium border border-red-500/20 transition-colors flex items-center justify-center gap-1"
+                              title="حذف العضو الجديد"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>حذف</span>
+                            </button>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
