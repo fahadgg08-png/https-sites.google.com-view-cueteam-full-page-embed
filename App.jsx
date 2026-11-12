@@ -36,7 +36,8 @@ import {
   RotateCcw,
   MessageCircle,
   UserPlus,
-  Calendar as CalendarIcon
+  Calendar as CalendarIcon,
+  UserMinus
 } from 'lucide-react';
 
 const TEAM_LOGO_URL = teamLogo;
@@ -194,7 +195,6 @@ export default function App() {
   const [newCsNotes, setNewCsNotes] = useState('');
   const [showAddCallSheet, setShowAddCallSheet] = useState(false);
 
-  // حالة التقويم والأحداث الملونة
   const [calendarEvents, setCalendarEvents] = useState(INITIAL_EVENTS);
   const [newEventTitle, setNewEventTitle] = useState('');
   const [newEventDate, setNewEventDate] = useState('');
@@ -373,6 +373,21 @@ export default function App() {
   };
 
   const isManagementUser = currentUser?.role?.includes('Management Team');
+
+  // دالة لطرد عضو من القسم الحالي (متاحة للإدارة فقط)
+  const handleRemoveMemberFromChannel = async (memberId, memberName) => {
+    if (!isManagementUser || activeChannel.startsWith('dm_')) return;
+    const currentList = channelMembers[activeChannel] || [];
+    const updatedList = currentList.filter((m) => m.id !== memberId);
+    
+    const updatedChannelMembers = {
+      ...channelMembers,
+      [activeChannel]: updatedList
+    };
+
+    setChannelMembers(updatedChannelMembers);
+    await updateGlobalStore({ channelMembers: updatedChannelMembers });
+  };
 
   const handleSelfRegister = async (e) => {
     e.preventDefault();
@@ -1345,13 +1360,23 @@ export default function App() {
                       ) : (
                         activeMembersInChannel.map((member) => {
                           const online = isMemberOnline(member.id);
+                          const canRemove = isManagementUser;
                           return (
                             <span
                               key={member.id}
-                              className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-200 border border-slate-700/80 flex items-center gap-1"
+                              className="text-[10px] px-2 py-1 rounded-full bg-slate-800/90 text-slate-200 border border-slate-700/80 flex items-center gap-1.5"
                             >
                               <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
-                              {member.name}
+                              <span>{member.name}</span>
+                              {canRemove && (
+                                <button
+                                  onClick={() => handleRemoveMemberFromChannel(member.id, member.name)}
+                                  className="text-red-400 hover:text-red-300 ml-0.5 p-0.5 rounded hover:bg-red-500/20 transition-colors"
+                                  title="إخراج من القسم (طرد)"
+                                >
+                                  <UserMinus className="w-3 h-3" />
+                                </button>
+                              )}
                             </span>
                           );
                         })
