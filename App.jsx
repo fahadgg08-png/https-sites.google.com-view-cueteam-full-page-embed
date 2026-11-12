@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import teamLogo from './logo.png.png';
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import {
   getFirestore,
@@ -34,7 +35,6 @@ import {
 } from 'lucide-react';
 
 // ضع رابط شعار الفريق المباشر هنا (أو ارفع صورة باسم logo.png في مجلد public في GitHub واكتب '/logo.png')
-import teamLogo from './logo.png.png';
 const TEAM_LOGO_URL = teamLogo;
 const firebaseConfig = {
   apiKey: "AIzaSyB4oVmgfNYFTxhajHnmtBtGXCPE80wTdEI",
