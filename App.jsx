@@ -35,7 +35,8 @@ import {
   KeyRound,
   RotateCcw,
   MessageCircle,
-  UserPlus
+  UserPlus,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 
 const TEAM_LOGO_URL = teamLogo;
@@ -114,6 +115,12 @@ const INITIAL_PROJECTS = [
   }
 ];
 
+const INITIAL_EVENTS = [
+  { id: 'ev_1', title: 'يوم التصوير الأول (الدرعية)', date: '2026-11-12', color: 'amber', category: 'تصوير' },
+  { id: 'ev_2', title: 'بروفة طاقم التمثيل', date: '2026-11-15', color: 'purple', category: 'بروفة' },
+  { id: 'ev_3', title: 'اجتماع إدارة الإنتاج', date: '2026-11-18', color: 'emerald', category: 'اجتماع' }
+];
+
 function getDirectChannelId(userAId, userBId) {
   const sorted = [userAId, userBId].sort();
   return `dm_${sorted[0]}_${sorted[1]}`;
@@ -187,6 +194,13 @@ export default function App() {
   const [newCsNotes, setNewCsNotes] = useState('');
   const [showAddCallSheet, setShowAddCallSheet] = useState(false);
 
+  // حالة التقويم والأحداث الملونة
+  const [calendarEvents, setCalendarEvents] = useState(INITIAL_EVENTS);
+  const [newEventTitle, setNewEventTitle] = useState('');
+  const [newEventDate, setNewEventDate] = useState('');
+  const [newEventColor, setNewEventColor] = useState('amber');
+  const [showAddEventModal, setShowAddEventModal] = useState(false);
+
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
   const [showAddProject, setShowAddProject] = useState(false);
@@ -245,6 +259,7 @@ export default function App() {
           if (data.userPasswords !== undefined) setUserPasswords(data.userPasswords);
           if (data.onlinePresence !== undefined) setOnlinePresence(data.onlinePresence);
           if (data.customMembers !== undefined) setCustomMembers(data.customMembers);
+          if (data.calendarEvents !== undefined) setCalendarEvents(data.calendarEvents);
         } else {
           setDoc(workspaceDocRef, {
             messages: [],
@@ -256,6 +271,7 @@ export default function App() {
             userPasswords: {},
             onlinePresence: {},
             customMembers: [],
+            calendarEvents: INITIAL_EVENTS,
             lastUpdated: Date.now()
           });
         }
@@ -346,6 +362,7 @@ export default function App() {
       channelMembers: newPartialState.channelMembers !== undefined ? newPartialState.channelMembers : channelMembers,
       userPasswords: newPartialState.userPasswords !== undefined ? newPartialState.userPasswords : userPasswords,
       customMembers: newPartialState.customMembers !== undefined ? newPartialState.customMembers : customMembers,
+      calendarEvents: newPartialState.calendarEvents !== undefined ? newPartialState.calendarEvents : calendarEvents,
       lastUpdated: Date.now()
     };
     try {
@@ -437,6 +454,41 @@ export default function App() {
       customMembers: updatedCustomMembers,
       userPasswords: updatedPasswords
     });
+  };
+
+  const handleAddCalendarEvent = (e) => {
+    e.preventDefault();
+    if (!newEventTitle.trim() || !newEventDate) return;
+
+    const colorMap = {
+      amber: 'تصوير ومشاهد',
+      purple: 'بروفات وعروض',
+      emerald: 'اجتماعات وإدارة',
+      blue: 'مونتاج ومونيتور',
+      rose: 'مواعيد نهائية (Deadlines)'
+    };
+
+    const newEv = {
+      id: 'ev_' + Date.now(),
+      title: newEventTitle.trim(),
+      date: newEventDate,
+      color: newEventColor,
+      category: colorMap[newEventColor] || 'عام'
+    };
+
+    const nextEvents = [newEv, ...calendarEvents];
+    setCalendarEvents(nextEvents);
+    updateGlobalStore({ calendarEvents: nextEvents });
+
+    setNewEventTitle('');
+    setNewEventDate('');
+    setShowAddEventModal(false);
+  };
+
+  const handleDeleteCalendarEvent = (evId) => {
+    const nextEvents = calendarEvents.filter((ev) => ev.id !== evId);
+    setCalendarEvents(nextEvents);
+    updateGlobalStore({ calendarEvents: nextEvents });
   };
 
   const handleStartDirectChat = (targetMember) => {
@@ -1029,6 +1081,16 @@ export default function App() {
             </button>
 
             <button
+              onClick={() => setActiveTab('calendar')}
+              className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'calendar' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <CalendarIcon className="w-4 h-4" />
+              <span>التقويم والأحداث</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('callsheet')}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'callsheet' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
@@ -1106,6 +1168,7 @@ export default function App() {
           <div className="flex items-center space-x-3 space-x-reverse">
             <h2 className="font-bold text-slate-100 text-base">
               {activeTab === 'chat' && (isDirectMessage && dmPartner ? `محادثة خاصة مع ${dmPartner.name}` : 'غرف التواصل ومهام الأقسام')}
+              {activeTab === 'calendar' && 'التقويم الملون وأحداث الفريق'}
               {activeTab === 'callsheet' && 'أجندة يوم التصوير والمواقع'}
               {activeTab === 'assets' && 'مكتبة الفريق والأعمال'}
               {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد من ${allTeamMembers.length})`}
@@ -1113,7 +1176,6 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* يظهر رمز الدعوة حصرياً لعضو الإدارة */}
             {isManagementUser && (
               <span className="text-[11px] px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-full font-mono">
                 رمز الدعوة: {TEAM_INVITE_CODE}
@@ -1533,6 +1595,117 @@ export default function App() {
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {activeTab === 'calendar' && (
+            <div className="space-y-6 max-w-4xl">
+              <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <div>
+                  <h3 className="text-sm font-bold text-amber-400">تقويم أحداث ومواعيد الفريق</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">تابع مواعيد التصوير، البروفات، والاجتماعات بالألوان المخصصة</p>
+                </div>
+                <button
+                  onClick={() => setShowAddEventModal(!showAddEventModal)}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+                >
+                  <Plus className="w-4 h-4" /> {showAddEventModal ? 'إغلاق النموذج' : 'إضافة موعد / حدث'}
+                </button>
+              </div>
+
+              {showAddEventModal && (
+                <form onSubmit={handleAddCalendarEvent} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4">
+                  <h4 className="text-xs font-bold text-amber-400">إضافة فعالية جديدة للتقويم</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div>
+                      <label className="block text-slate-400 mb-1">عنوان الحدث:</label>
+                      <input
+                        type="text"
+                        required
+                        value={newEventTitle}
+                        onChange={(e) => setNewEventTitle(e.target.value)}
+                        placeholder="مثال: تصوير المشهد الخارجي..."
+                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 mb-1">التاريخ:</label>
+                      <input
+                        type="date"
+                        required
+                        value={newEventDate}
+                        onChange={(e) => setNewEventDate(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-slate-400 mb-1">تصنيف اللون (نوع النشاط):</label>
+                      <select
+                        value={newEventColor}
+                        onChange={(e) => setNewEventColor(e.target.value)}
+                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
+                      >
+                        <option value="amber">أصفر (تصوير ومشاهد)</option>
+                        <option value="purple">بنفسجي (بروفات وعروض)</option>
+                        <option value="emerald">أخضر (اجتماعات وإدارة)</option>
+                        <option value="blue">أزرق (مونتاج ومونيتور)</option>
+                        <option value="rose">أحمر وردي (موعد نهائي / Deadline)</option>
+                      </select>
+                    </div>
+                  </div>
+                  <button
+                    type="submit"
+                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                  >
+                    حفظ ونشر الموعد في التقويم
+                  </button>
+                </form>
+              )}
+
+              {calendarEvents.length === 0 ? (
+                <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
+                  لا توجد أحداث مضافة في التقويم حالياً. اضغط على "إضافة موعد / حدث" للبدء.
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-3">
+                  {calendarEvents.map((ev) => {
+                    const colorStyles = {
+                      amber: 'bg-amber-500/15 border-amber-500/30 text-amber-400',
+                      purple: 'bg-purple-500/15 border-purple-500/30 text-purple-400',
+                      emerald: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
+                      blue: 'bg-blue-500/15 border-blue-500/30 text-blue-400',
+                      rose: 'bg-rose-500/15 border-rose-500/30 text-rose-400'
+                    }[ev.color] || 'bg-slate-800 border-slate-700 text-slate-300';
+
+                    const dotColor = {
+                      amber: 'bg-amber-400',
+                      purple: 'bg-purple-400',
+                      emerald: 'bg-emerald-400',
+                      blue: 'bg-blue-400',
+                      rose: 'bg-rose-400'
+                    }[ev.color] || 'bg-slate-400';
+
+                    return (
+                      <div key={ev.id} className={`p-4 rounded-xl border flex items-center justify-between gap-4 ${colorStyles}`}>
+                        <div className="flex items-center gap-3">
+                          <span className={`w-3 h-3 rounded-full flex-shrink-0 ${dotColor}`}></span>
+                          <div>
+                            <h4 className="text-xs font-bold text-slate-100">{ev.title}</h4>
+                            <p className="text-[11px] opacity-80 mt-0.5">التصنيف: {ev.category} • التاريخ: {ev.date}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => handleDeleteCalendarEvent(ev.id)}
+                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 transition-colors"
+                          title="حذف الحدث"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           )}
 
