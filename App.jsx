@@ -34,8 +34,8 @@ import {
 } from 'lucide-react';
 
 // ضع رابط شعار الفريق المباشر هنا (أو ارفع صورة باسم logo.png في مجلد public في GitHub واكتب '/logo.png')
-const TEAM_LOGO_URL = '';
-
+import teamLogo from './logo.png.png';
+const TEAM_LOGO_URL = teamLogo;
 const firebaseConfig = {
   apiKey: "AIzaSyB4oVmgfNYFTxhajHnmtBtGXCPE80wTdEI",
   authDomain: "team-cue.firebaseapp.com",
