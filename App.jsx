@@ -31,10 +31,13 @@ import {
   ArrowRight,
   Video,
   Link as LinkIcon,
-  FolderPlus
+  FolderPlus,
+  KeyRound,
+  RotateCcw
 } from 'lucide-react';
 
 const TEAM_LOGO_URL = teamLogo;
+const DEFAULT_PASSWORD = 'cue2026';
 
 const firebaseConfig = {
   apiKey: "AIzaSyB4oVmgfNYFTxhajHnmtBtGXCPE80wTdEI",
@@ -50,24 +53,24 @@ const db = getFirestore(app);
 const workspaceDocRef = doc(db, 'workspaces', 'team_cue_main');
 
 const TEAM_MEMBERS = [
-  { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', status: 'online', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com', password: 'cue2026' },
-  { id: 'rand', name: 'رند محمد الرميخان', role: 'Co-founder | Management Team | Art Department', status: 'online', avatar: '', phone: '0554095903', email: 'rrand.msa@gmail.com', password: 'cue2026' },
-  { id: 'ibrahim', name: 'إبراهيم المطرفي', role: 'Management Team | Head of Production Department', status: 'online', avatar: '', phone: '0560057562', email: 'i.almatrafi.cue@gmail.com', password: 'cue2026' },
-  { id: 'abdulaziz', name: 'عبدالعزيز المعاوي', role: 'Management Team | Head of Directing Department', status: 'online', avatar: '', phone: '0554760134', email: 'ajqvvv@gmail.com', password: 'cue2026' },
-  { id: 'joud', name: 'جود فهد الغامدي', role: 'Management Team | Directing Department', status: 'online', avatar: '', phone: '0555776788', email: 'joudiwooow@gmail.com', password: 'cue2026' },
-  { id: 'khalid', name: 'خالد عبدالله الجمحان', role: 'Production Department', status: 'online', avatar: '', phone: '0564099683', email: 'khalid.al-jamhan@sadufilms.com', password: 'cue2026' },
-  { id: 'abdulmalik_d', name: 'عبدالملك الداوود', role: 'Production Department', status: 'online', avatar: '', phone: '0562881333', email: 'aldaudabdul@gmail.com', password: 'cue2026' },
-  { id: 'tariq', name: 'طارق عبدالله الدوسري', role: 'Production Department', status: 'online', avatar: '', phone: '0509272230', email: 'Triq091d@gmail.com', password: 'cue2026' },
-  { id: 'abdullatif', name: 'عبداللطيف المسعود', role: 'Production Department', status: 'online', avatar: '', phone: '0510545538', email: 'bdalltyfalmy@gmail.com', password: 'cue2026' },
-  { id: 'layan', name: 'ليان سعد الغامدي', role: 'Production Department | Art Department', status: 'online', avatar: '', phone: '0569137875', email: 'layanssaadd11@gmail.com', password: 'cue2026' },
-  { id: 'abbad', name: 'عباد العتيبي', role: 'Directing Department', status: 'online', avatar: '', phone: '0555552162', email: 'abad.alraqas@gmail.com', password: 'cue2026' },
-  { id: 'ghazi', name: 'غازي الكندي', role: 'Directing Department | Art Department', status: 'online', avatar: '', phone: '0535553792', email: 'hhq477@gmail.com', password: 'cue2026' },
-  { id: 'haya', name: 'هيا العيسى', role: 'Directing Department', status: 'online', avatar: '', phone: '0559527692', email: 'Haya.11.alessa@gmail.com', password: 'cue2026' },
-  { id: 'faisal', name: 'فيصل الجميعه', role: 'Art Department', status: 'online', avatar: '', phone: '0555470681', email: '1414faisalahmad@gmail.com', password: 'cue2026' },
-  { id: 'abdulmalik_m', name: 'عبدالملك المعيقل', role: 'Art Department', status: 'online', avatar: '', phone: '0536128116', email: 'mlok.fg87@gmail.com', password: 'cue2026' },
-  { id: 'mohammed_s', name: 'محمد ال شفلوت', role: 'Art Department', status: 'online', avatar: '', phone: '0501205773', email: 'm7md.ali.077@gmail.com', password: 'cue2026' },
-  { id: 'mohammed_d', name: 'محمد الدامر', role: 'Art Department', status: 'online', avatar: '', phone: '0570750748', email: 'dammhmd049@gmail.com', password: 'cue2026' },
-  { id: 'leen', name: 'لين محمد الغامدي', role: 'Art Department', status: 'online', avatar: '', phone: '0549811426', email: 'ileen17m@gmail.com', password: 'cue2026' }
+  { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', status: 'online', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com' },
+  { id: 'rand', name: 'رند محمد الرميخان', role: 'Co-founder | Management Team | Art Department', status: 'online', avatar: '', phone: '0554095903', email: 'rrand.msa@gmail.com' },
+  { id: 'ibrahim', name: 'إبراهيم المطرفي', role: 'Management Team | Head of Production Department', status: 'online', avatar: '', phone: '0560057562', email: 'i.almatrafi.cue@gmail.com' },
+  { id: 'abdulaziz', name: 'عبدالعزيز المعاوي', role: 'Management Team | Head of Directing Department', status: 'online', avatar: '', phone: '0554760134', email: 'ajqvvv@gmail.com' },
+  { id: 'joud', name: 'جود فهد الغامدي', role: 'Management Team | Directing Department', status: 'online', avatar: '', phone: '0555776788', email: 'joudiwooow@gmail.com' },
+  { id: 'khalid', name: 'خالد عبدالله الجمحان', role: 'Production Department', status: 'online', avatar: '', phone: '0564099683', email: 'khalid.al-jamhan@sadufilms.com' },
+  { id: 'abdulmalik_d', name: 'عبدالملك الداوود', role: 'Production Department', status: 'online', avatar: '', phone: '0562881333', email: 'aldaudabdul@gmail.com' },
+  { id: 'tariq', name: 'طارق عبدالله الدوسري', role: 'Production Department', status: 'online', avatar: '', phone: '0509272230', email: 'Triq091d@gmail.com' },
+  { id: 'abdullatif', name: 'عبداللطيف المسعود', role: 'Production Department', status: 'online', avatar: '', phone: '0510545538', email: 'bdalltyfalmy@gmail.com' },
+  { id: 'layan', name: 'ليان سعد الغامدي', role: 'Production Department | Art Department', status: 'online', avatar: '', phone: '0569137875', email: 'layanssaadd11@gmail.com' },
+  { id: 'abbad', name: 'عباد العتيبي', role: 'Directing Department', status: 'online', avatar: '', phone: '0555552162', email: 'abad.alraqas@gmail.com' },
+  { id: 'ghazi', name: 'غازي الكندي', role: 'Directing Department | Art Department', status: 'online', avatar: '', phone: '0535553792', email: 'hhq477@gmail.com' },
+  { id: 'haya', name: 'هيا العيسى', role: 'Directing Department', status: 'online', avatar: '', phone: '0559527692', email: 'Haya.11.alessa@gmail.com' },
+  { id: 'faisal', name: 'فيصل الجميعه', role: 'Art Department', status: 'online', avatar: '', phone: '0555470681', email: '1414faisalahmad@gmail.com' },
+  { id: 'abdulmalik_m', name: 'عبدالملك المعيقل', role: 'Art Department', status: 'online', avatar: '', phone: '0536128116', email: 'mlok.fg87@gmail.com' },
+  { id: 'mohammed_s', name: 'محمد ال شفلوت', role: 'Art Department', status: 'online', avatar: '', phone: '0501205773', email: 'm7md.ali.077@gmail.com' },
+  { id: 'mohammed_d', name: 'محمد الدامر', role: 'Art Department', status: 'online', avatar: '', phone: '0570750748', email: 'dammhmd049@gmail.com' },
+  { id: 'leen', name: 'لين محمد الغامدي', role: 'Art Department', status: 'online', avatar: '', phone: '0549811426', email: 'ileen17m@gmail.com' }
 ];
 
 const CHANNELS = [
@@ -132,9 +135,18 @@ function TeamLogo({ size = 'md' }) {
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
+  const [pendingUser, setPendingUser] = useState(null);
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+
+  // حالات تعيين / تغيير الرمز السري الشخصي
+  const [userPasswords, setUserPasswords] = useState({});
+  const [newPasswordInput, setNewPasswordInput] = useState('');
+  const [confirmPasswordInput, setConfirmPasswordInput] = useState('');
+  const [passwordSetupError, setPasswordSetupError] = useState('');
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
+
   const [activeTab, setActiveTab] = useState('chat');
   const [activeChannel, setActiveChannel] = useState('general');
   const [channelSubTab, setChannelSubTab] = useState('chat');
@@ -172,6 +184,7 @@ export default function App() {
   const [assets, setAssets] = useState([]);
   const [channelMembers, setChannelMembers] = useState({});
   const [syncStatus, setSyncStatus] = useState('جاري الاتصال...');
+  const [isCloudLoaded, setIsCloudLoaded] = useState(false);
 
   const [unlockedChannels, setUnlockedChannels] = useState(() => {
     try {
@@ -197,6 +210,7 @@ export default function App() {
       workspaceDocRef,
       (docSnap) => {
         setSyncStatus('متصل لحظياً (Firebase Live)');
+        setIsCloudLoaded(true);
         if (docSnap.exists()) {
           const data = docSnap.data();
           if (data.messages !== undefined) setMessages(data.messages);
@@ -205,6 +219,7 @@ export default function App() {
           if (data.assets !== undefined) setAssets(data.assets);
           if (data.projects !== undefined) setProjects(data.projects);
           if (data.channelMembers !== undefined) setChannelMembers(data.channelMembers);
+          if (data.userPasswords !== undefined) setUserPasswords(data.userPasswords);
         } else {
           setDoc(workspaceDocRef, {
             messages: [],
@@ -213,6 +228,7 @@ export default function App() {
             projects: INITIAL_PROJECTS,
             assets: [],
             channelMembers: {},
+            userPasswords: {},
             lastUpdated: Date.now()
           });
         }
@@ -220,6 +236,7 @@ export default function App() {
       (error) => {
         console.error('Firestore Sync Error:', error);
         setSyncStatus('خطأ في المزامنة');
+        setIsCloudLoaded(true);
       }
     );
 
@@ -251,6 +268,7 @@ export default function App() {
       projects: newPartialState.projects !== undefined ? newPartialState.projects : projects,
       assets: newPartialState.assets !== undefined ? newPartialState.assets : assets,
       channelMembers: newPartialState.channelMembers !== undefined ? newPartialState.channelMembers : channelMembers,
+      userPasswords: newPartialState.userPasswords !== undefined ? newPartialState.userPasswords : userPasswords,
       lastUpdated: Date.now()
     };
     try {
@@ -449,32 +467,95 @@ export default function App() {
     updateGlobalStore({ callSheets: nextCs });
   };
 
+  // تسجيل الدخول والتحقق من الرمز الشخصي أو الافتراضي
   const handleLogin = (e) => {
     e.preventDefault();
     setLoginError('');
-    try {
-      const cleanEmail = (loginEmail || '').trim().toLowerCase();
-      const foundUser = TEAM_MEMBERS.find((m) => m.email.toLowerCase() === cleanEmail);
-      
-      if (!foundUser) {
-        setLoginError('البريد الإلكتروني غير مسجل في قائمة تيم كيو.');
-        return;
-      }
-
-      if (foundUser.password !== loginPassword) {
-        setLoginError('كلمة المرور غير صحيحة. يرجى التأكد وإعادة المحاولة.');
-        return;
-      }
-
-      setCurrentUser(foundUser);
-    } catch (err) {
-      console.error("Login Error:", err);
-      setLoginError('حدث خطأ أثناء تسجيل الدخول، يرجى المحاولة مرة أخرى.');
+    if (!isCloudLoaded) {
+      setLoginError('جاري الاتصال بقاعدة البيانات... انتظر ثانية ثم اضغط دخول.');
+      return;
     }
+
+    const cleanEmail = (loginEmail || '').trim().toLowerCase();
+    const foundUser = TEAM_MEMBERS.find((m) => m.email.toLowerCase() === cleanEmail);
+
+    if (!foundUser) {
+      setLoginError('البريد الإلكتروني غير مسجل في قائمة تيم كيو.');
+      return;
+    }
+
+    const savedCustomPassword = userPasswords[foundUser.id];
+    const activePassword = savedCustomPassword || DEFAULT_PASSWORD;
+
+    if (activePassword !== loginPassword) {
+      setLoginError('الرمز السري غير صحيح. تأكد من إدخال رمزك الشخصي الخاص.');
+      return;
+    }
+
+    // إذا كان العضو لا يزال يستخدم الرمز الافتراضي، نطلب منه تعيين رمز خاص به فوراً
+    if (!savedCustomPassword) {
+      setPendingUser(foundUser);
+      setNewPasswordInput('');
+      setConfirmPasswordInput('');
+      setPasswordSetupError('');
+      return;
+    }
+
+    setCurrentUser(foundUser);
+  };
+
+  // حفظ الرمز الشخصي الجديد للعضو
+  const handleSavePersonalPassword = async (e) => {
+    e.preventDefault();
+    setPasswordSetupError('');
+    const targetUser = pendingUser || currentUser;
+    if (!targetUser) return;
+
+    const cleanNewPass = newPasswordInput.trim();
+    if (cleanNewPass.length < 4) {
+      setPasswordSetupError('يجب أن يتكون الرمز السري من 4 خانات على الأقل.');
+      return;
+    }
+    if (cleanNewPass === DEFAULT_PASSWORD) {
+      setPasswordSetupError('يرجى اختيار رمز خاص بك يختلف عن الرمز الافتراضي.');
+      return;
+    }
+    if (cleanNewPass !== confirmPasswordInput.trim()) {
+      setPasswordSetupError('الرمزان غير متطابقين، يرجى التأكد وإعادة الإدخال.');
+      return;
+    }
+
+    const updatedPasswords = {
+      ...userPasswords,
+      [targetUser.id]: cleanNewPass
+    };
+
+    setUserPasswords(updatedPasswords);
+    await updateGlobalStore({ userPasswords: updatedPasswords });
+
+    setNewPasswordInput('');
+    setConfirmPasswordInput('');
+    setShowChangePasswordModal(false);
+
+    if (pendingUser) {
+      setCurrentUser(pendingUser);
+      setPendingUser(null);
+    }
+  };
+
+  // إعادة ضبط رمز عضو للرمز الافتراضي (متاح للإدارة فقط في حال نسيان الرمز)
+  const handleResetMemberPassword = async (memberId, memberName) => {
+    if (!isManagementUser) return;
+    const updatedPasswords = { ...userPasswords };
+    delete updatedPasswords[memberId];
+    setUserPasswords(updatedPasswords);
+    await updateGlobalStore({ userPasswords: updatedPasswords });
+    alert(`تمت إعادة ضبط رمز (${memberName}) للرمز الافتراضي، وسيُطلب منه تعيين رمز جديد عند دخوله القادم.`);
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
+    setPendingUser(null);
     setLoginEmail('');
     setLoginPassword('');
   };
@@ -484,6 +565,73 @@ export default function App() {
   const activeMembersInChannel = channelMembers[activeChannel] || [];
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const projectAssets = assets.filter((a) => a.projectId === selectedProjectId);
+
+  // شاشة تعيين الرمز الشخصي عند أول دخول
+  if (pendingUser) {
+    return (
+      <div className="flex min-h-screen bg-slate-950 text-slate-100 items-center justify-center p-4 dir-rtl" dir="rtl">
+        <div className="w-full max-w-md bg-slate-900 border border-amber-500/40 p-8 rounded-2xl shadow-2xl space-y-6">
+          <div className="text-center space-y-2 flex flex-col items-center">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+              <KeyRound className="w-7 h-7" />
+            </div>
+            <h2 className="text-xl font-bold text-amber-400">مرحباً {pendingUser.name.split(' ')[0]}!</h2>
+            <p className="text-xs text-slate-300 leading-relaxed">
+              لحماية حسابك ومنع دخول أي شخص آخر، قم بتعيين <span className="text-amber-400 font-bold">رمز سري خاص بك</span> الآن (يُحفظ لحسابك بشكل دائم):
+            </p>
+          </div>
+
+          <form onSubmit={handleSavePersonalPassword} className="space-y-4">
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري الجديد الخاص بك:</label>
+              <input
+                type="password"
+                required
+                value={newPasswordInput}
+                onChange={(e) => setNewPasswordInput(e.target.value)}
+                placeholder="اكتب رمزك السري الخاص..."
+                className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">تأكيد الرمز السري الجديد:</label>
+              <input
+                type="password"
+                required
+                value={confirmPasswordInput}
+                onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                placeholder="أعد كتابة الرمز السري..."
+                className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
+              />
+            </div>
+
+            {passwordSetupError && (
+              <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
+                {passwordSetupError}
+              </div>
+            )}
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-xs transition-colors"
+              >
+                رجوع
+              </button>
+              <button
+                type="submit"
+                className="flex-[2] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm transition-colors"
+              >
+                حفظ الرمز والدخول للمنصة
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (!currentUser) {
     return (
@@ -510,7 +658,7 @@ export default function App() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">كلمة المرور الخاصة بك:</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري الخاص بك:</label>
               <input
                 type="password"
                 required
@@ -537,7 +685,7 @@ export default function App() {
 
           <div className="text-center border-t border-slate-800 pt-4">
             <p className="text-[11px] text-slate-500">
-              جميع الحسابات متصلة ومزودة بمزامنة سحابية فورية
+              كل عضو يمتلك رمزاً سرياً مستقلاً لحماية حسابه
             </p>
           </div>
         </div>
@@ -615,6 +763,20 @@ export default function App() {
               <p className="text-[10px] text-amber-400 truncate">{currentUser.role.split('|')[0]}</p>
             </div>
           </div>
+
+          <button
+            onClick={() => {
+              setNewPasswordInput('');
+              setConfirmPasswordInput('');
+              setPasswordSetupError('');
+              setShowChangePasswordModal(true);
+            }}
+            className="w-full py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 rounded-lg text-[11px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+            <span>تغيير رمزي السري</span>
+          </button>
+
           <button
             onClick={handleLogout}
             className="w-full text-center py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium border border-red-500/20 transition-colors"
@@ -624,7 +786,7 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col bg-slate-950 overflow-hidden">
+      <main className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative">
         <header className="h-14 bg-slate-900/60 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-md">
           <div className="flex items-center space-x-3 space-x-reverse">
             <h2 className="font-bold text-slate-100 text-base">
@@ -1346,37 +1508,120 @@ export default function App() {
 
           {activeTab === 'team' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {TEAM_MEMBERS.map((member) => (
-                <div key={member.id} className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between space-y-4">
-                  <div className="flex items-center space-x-3 space-x-reverse">
-                    <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
-                      {member.name.charAt(0)}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
-                      <p className="text-xs text-amber-400 font-medium">{member.role}</p>
-                      <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-400">
-                        <span className={`w-2 h-2 rounded-full ${member.status === 'online' ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
-                        <span>{member.status === 'online' ? 'متواجد الآن' : 'غير متصل'}</span>
+              {TEAM_MEMBERS.map((member) => {
+                const hasCustomPass = Boolean(userPasswords[member.id]);
+                return (
+                  <div key={member.id} className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between space-y-4">
+                    <div className="flex items-center space-x-3 space-x-reverse">
+                      <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
+                        {member.name.charAt(0)}
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
+                        <p className="text-xs text-amber-400 font-medium">{member.role}</p>
+                        <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-400">
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                            <span>متواجد الآن</span>
+                          </span>
+                          <span className={`px-1.5 py-0.2 rounded ${hasCustomPass ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                            {hasCustomPass ? 'رمز خاص مفعّل' : 'رمز افتراضي'}
+                          </span>
+                        </div>
                       </div>
                     </div>
-                  </div>
 
-                  <div className="border-t border-slate-800 pt-3 space-y-2 text-xs text-slate-400">
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <Phone className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{member.phone}</span>
-                    </div>
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <Mail className="w-3.5 h-3.5 text-amber-500" />
-                      <span>{member.email}</span>
+                    <div className="border-t border-slate-800 pt-3 space-y-2 text-xs text-slate-400">
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <Phone className="w-3.5 h-3.5 text-amber-500" />
+                        <span>{member.phone}</span>
+                      </div>
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        <Mail className="w-3.5 h-3.5 text-amber-500" />
+                        <span>{member.email}</span>
+                      </div>
+                      {isManagementUser && hasCustomPass && (
+                        <button
+                          onClick={() => handleResetMemberPassword(member.id, member.name)}
+                          className="w-full mt-2 py-1.5 bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 rounded-lg text-[11px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <RotateCcw className="w-3 h-3" />
+                          <span>إعادة ضبط الرمز السري (إذا نسيه)</span>
+                        </button>
+                      )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
+
+        {/* نافذة تغيير الرمز الشخصي من داخل المنصة */}
+        {showChangePasswordModal && (
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
+                  <KeyRound className="w-4 h-4" /> تغيير الرمز السري لحسابك
+                </h3>
+                <button
+                  onClick={() => setShowChangePasswordModal(false)}
+                  className="text-slate-400 hover:text-slate-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSavePersonalPassword} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-300 mb-1">الرمز السري الجديد:</label>
+                  <input
+                    type="password"
+                    required
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    placeholder="اكتب الرمز الجديد..."
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1">تأكيد الرمز الجديد:</label>
+                  <input
+                    type="password"
+                    required
+                    value={confirmPasswordInput}
+                    onChange={(e) => setConfirmPasswordInput(e.target.value)}
+                    placeholder="أعد كتابة الرمز..."
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {passwordSetupError && (
+                  <p className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg">
+                    {passwordSetupError}
+                  </p>
+                )}
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowChangePasswordModal(false)}
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    حفظ التغيير
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
