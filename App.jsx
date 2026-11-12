@@ -33,7 +33,8 @@ import {
   Link as LinkIcon,
   FolderPlus,
   KeyRound,
-  RotateCcw
+  RotateCcw,
+  MessageCircle
 } from 'lucide-react';
 
 const TEAM_LOGO_URL = teamLogo;
@@ -53,24 +54,24 @@ const db = getFirestore(app);
 const workspaceDocRef = doc(db, 'workspaces', 'team_cue_main');
 
 const TEAM_MEMBERS = [
-  { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com' },
-  { id: 'rand', name: 'رند محمد الرميخان', role: 'Co-founder | Management Team | Art Department', avatar: '', phone: '0554095903', email: 'rrand.msa@gmail.com' },
-  { id: 'ibrahim', name: 'إبراهيم المطرفي', role: 'Management Team | Head of Production Department', avatar: '', phone: '0560057562', email: 'i.almatrafi.cue@gmail.com' },
-  { id: 'abdulaziz', name: 'عبدالعزيز المعاوي', role: 'Management Team | Head of Directing Department', avatar: '', phone: '0554760134', email: 'ajqvvv@gmail.com' },
-  { id: 'joud', name: 'جود فهد الغامدي', role: 'Management Team | Directing Department', avatar: '', phone: '0555776788', email: 'joudiwooow@gmail.com' },
-  { id: 'khalid', name: 'خالد عبدالله الجمحان', role: 'Production Department', avatar: '', phone: '0564099683', email: 'khalid.al-jamhan@sadufilms.com' },
-  { id: 'abdulmalik_d', name: 'عبدالملك الداوود', role: 'Production Department', avatar: '', phone: '0562881333', email: 'aldaudabdul@gmail.com' },
-  { id: 'tariq', name: 'طارق عبدالله الدوسري', role: 'Production Department', avatar: '', phone: '0509272230', email: 'Triq091d@gmail.com' },
-  { id: 'abdullatif', name: 'عبداللطيف المسعود', role: 'Production Department', avatar: '', phone: '0510545538', email: 'bdalltyfalmy@gmail.com' },
-  { id: 'layan', name: 'ليان سعد الغامدي', role: 'Production Department | Art Department', avatar: '', phone: '0569137875', email: 'layanssaadd11@gmail.com' },
-  { id: 'abbad', name: 'عباد العتيبي', role: 'Directing Department', avatar: '', phone: '0555552162', email: 'abad.alraqas@gmail.com' },
-  { id: 'ghazi', name: 'غازي الكندي', role: 'Directing Department | Art Department', avatar: '', phone: '0535553792', email: 'hhq477@gmail.com' },
-  { id: 'haya', name: 'هيا العيسى', role: 'Directing Department', avatar: '', phone: '0559527692', email: 'Haya.11.alessa@gmail.com' },
-  { id: 'faisal', name: 'فيصل الجميعه', role: 'Art Department', avatar: '', phone: '0555470681', email: '1414faisalahmad@gmail.com' },
-  { id: 'abdulmalik_m', name: 'عبدالملك المعيقل', role: 'Art Department', avatar: '', phone: '0536128116', email: 'mlok.fg87@gmail.com' },
-  { id: 'mohammed_s', name: 'محمد ال شفلوت', role: 'Art Department', avatar: '', phone: '0501205773', email: 'm7md.ali.077@gmail.com' },
-  { id: 'mohammed_d', name: 'محمد الدامر', role: 'Art Department', avatar: '', phone: '0570750748', email: 'dammhmd049@gmail.com' },
-  { id: 'leen', name: 'لين محمد الغامدي', role: 'Art Department', avatar: '', phone: '0549811426', email: 'ileen17m@gmail.com' }
+  { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', status: 'online', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com' },
+  { id: 'rand', name: 'رند محمد الرميخان', role: 'Co-founder | Management Team | Art Department', status: 'online', avatar: '', phone: '0554095903', email: 'rrand.msa@gmail.com' },
+  { id: 'ibrahim', name: 'إبراهيم المطرفي', role: 'Management Team | Head of Production Department', status: 'online', avatar: '', phone: '0560057562', email: 'i.almatrafi.cue@gmail.com' },
+  { id: 'abdulaziz', name: 'عبدالعزيز المعاوي', role: 'Management Team | Head of Directing Department', status: 'online', avatar: '', phone: '0554760134', email: 'ajqvvv@gmail.com' },
+  { id: 'joud', name: 'جود فهد الغامدي', role: 'Management Team | Directing Department', status: 'online', avatar: '', phone: '0555776788', email: 'joudiwooow@gmail.com' },
+  { id: 'khalid', name: 'خالد عبدالله الجمحان', role: 'Production Department', status: 'online', avatar: '', phone: '0564099683', email: 'khalid.al-jamhan@sadufilms.com' },
+  { id: 'abdulmalik_d', name: 'عبدالملك الداوود', role: 'Production Department', status: 'online', avatar: '', phone: '0562881333', email: 'aldaudabdul@gmail.com' },
+  { id: 'tariq', name: 'طارق عبدالله الدوسري', role: 'Production Department', status: 'online', avatar: '', phone: '0509272230', email: 'Triq091d@gmail.com' },
+  { id: 'abdullatif', name: 'عبداللطيف المسعود', role: 'Production Department', status: 'online', avatar: '', phone: '0510545538', email: 'bdalltyfalmy@gmail.com' },
+  { id: 'layan', name: 'ليان سعد الغامدي', role: 'Production Department | Art Department', status: 'online', avatar: '', phone: '0569137875', email: 'layanssaadd11@gmail.com' },
+  { id: 'abbad', name: 'عباد العتيبي', role: 'Directing Department', status: 'online', avatar: '', phone: '0555552162', email: 'abad.alraqas@gmail.com' },
+  { id: 'ghazi', name: 'غازي الكندي', role: 'Directing Department | Art Department', status: 'online', avatar: '', phone: '0535553792', email: 'hhq477@gmail.com' },
+  { id: 'haya', name: 'هيا العيسى', role: 'Directing Department', status: 'online', avatar: '', phone: '0559527692', email: 'Haya.11.alessa@gmail.com' },
+  { id: 'faisal', name: 'فيصل الجميعه', role: 'Art Department', status: 'online', avatar: '', phone: '0555470681', email: '1414faisalahmad@gmail.com' },
+  { id: 'abdulmalik_m', name: 'عبدالملك المعيقل', role: 'Art Department', status: 'online', avatar: '', phone: '0536128116', email: 'mlok.fg87@gmail.com' },
+  { id: 'mohammed_s', name: 'محمد ال شفلوت', role: 'Art Department', status: 'online', avatar: '', phone: '0501205773', email: 'm7md.ali.077@gmail.com' },
+  { id: 'mohammed_d', name: 'محمد الدامر', role: 'Art Department', status: 'online', avatar: '', phone: '0570750748', email: 'dammhmd049@gmail.com' },
+  { id: 'leen', name: 'لين محمد الغامدي', role: 'Art Department', status: 'online', avatar: '', phone: '0549811426', email: 'ileen17m@gmail.com' }
 ];
 
 const CHANNELS = [
@@ -111,6 +112,12 @@ const INITIAL_PROJECTS = [
   }
 ];
 
+// إنشاء معرّف موحّد وثابت للمحادثة الثنائية بين أي عضوين
+function getDirectChannelId(userAId, userBId) {
+  const sorted = [userAId, userBId].sort();
+  return `dm_${sorted[0]}_${sorted[1]}`;
+}
+
 function TeamLogo({ size = 'md' }) {
   const [imgError, setImgError] = useState(false);
   const dimensions = size === 'lg' ? 'w-16 h-16 text-3xl rounded-2xl' : 'w-9 h-9 text-xl rounded-xl';
@@ -140,7 +147,6 @@ export default function App() {
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // كلمات المرور والحضور التلقائي الحي
   const [userPasswords, setUserPasswords] = useState({});
   const [onlinePresence, setOnlinePresence] = useState({});
   const [nowTick, setNowTick] = useState(Date.now());
@@ -153,6 +159,7 @@ export default function App() {
   const [activeTab, setActiveTab] = useState('chat');
   const [activeChannel, setActiveChannel] = useState('general');
   const [channelSubTab, setChannelSubTab] = useState('chat');
+  const [openedDmUserIds, setOpenedDmUserIds] = useState([]);
 
   const [inputMessage, setInputMessage] = useState('');
 
@@ -248,7 +255,6 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // مؤقت تحديث الواجهة كل 15 ثانية للتحقق من حالة تواجد الأعضاء تلقائياً
   useEffect(() => {
     const clockInterval = setInterval(() => {
       setNowTick(Date.now());
@@ -256,7 +262,6 @@ export default function App() {
     return () => clearInterval(clockInterval);
   }, []);
 
-  // إرسال نبضة التواجد التلقائية إلى Firestore عند دخول العضو وكل 25 ثانية
   useEffect(() => {
     if (!currentUser) return;
 
@@ -292,7 +297,6 @@ export default function App() {
     };
   }, [currentUser]);
 
-  // دالة للتحقق التلقائي هل العضو متواجد الآن (نشط خلال آخر 65 ثانية)
   const isMemberOnline = (memberId) => {
     if (currentUser && currentUser.id === memberId) return true;
     const lastSeen = onlinePresence[memberId];
@@ -301,7 +305,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    if (!currentUser || !activeChannel) return;
+    if (!currentUser || !activeChannel || activeChannel.startsWith('dm_')) return;
     const isUnlocked = !CHANNELS.find((c) => c.id === activeChannel)?.private || unlockedChannels.includes(activeChannel);
     if (!isUnlocked) return;
 
@@ -336,6 +340,18 @@ export default function App() {
   };
 
   const isManagementUser = currentUser?.role?.includes('Management Team');
+
+  // فتح محادثة خاصة مباشرة مع عضو محدد
+  const handleStartDirectChat = (targetMember) => {
+    if (!currentUser || targetMember.id === currentUser.id) return;
+    const dmChannelId = getDirectChannelId(currentUser.id, targetMember.id);
+    if (!openedDmUserIds.includes(targetMember.id)) {
+      setOpenedDmUserIds((prev) => [targetMember.id, ...prev]);
+    }
+    setActiveChannel(dmChannelId);
+    setChannelSubTab('chat');
+    setActiveTab('chat');
+  };
 
   const handleAddProject = (e) => {
     e.preventDefault();
@@ -624,6 +640,21 @@ export default function App() {
     setLoginPassword('');
   };
 
+  const isDirectMessage = activeChannel.startsWith('dm_');
+  const dmPartner = isDirectMessage && currentUser
+    ? TEAM_MEMBERS.find((m) => m.id !== currentUser.id && activeChannel === getDirectChannelId(currentUser.id, m.id))
+    : null;
+
+  // جمع قائمة الأعضاء الذين بينك وبينهم محادثات خاصة (سواء أُرسلت رسائل أو فُتحت للتو)
+  const dmPartnerList = currentUser
+    ? TEAM_MEMBERS.filter((m) => {
+        if (m.id === currentUser.id) return false;
+        const dmId = getDirectChannelId(currentUser.id, m.id);
+        const hasMessages = messages.some((msg) => msg.channelId === dmId);
+        return hasMessages || openedDmUserIds.includes(m.id);
+      })
+    : [];
+
   const currentMessages = messages.filter((m) => m.channelId === activeChannel);
   const currentChannelTasks = tasks.filter((t) => (t.channelId || 'general') === activeChannel);
   const activeMembersInChannel = channelMembers[activeChannel] || [];
@@ -859,7 +890,7 @@ export default function App() {
         <header className="h-14 bg-slate-900/60 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-md">
           <div className="flex items-center space-x-3 space-x-reverse">
             <h2 className="font-bold text-slate-100 text-base">
-              {activeTab === 'chat' && 'غرف التواصل ومهام الأقسام'}
+              {activeTab === 'chat' && (isDirectMessage && dmPartner ? `محادثة خاصة مع ${dmPartner.name}` : 'غرف التواصل ومهام الأقسام')}
               {activeTab === 'callsheet' && 'أجندة يوم التصوير والمواقع'}
               {activeTab === 'assets' && 'مكتبة الفريق والأعمال'}
               {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد الآن)`}
@@ -876,9 +907,9 @@ export default function App() {
         <div className="flex-1 overflow-auto p-6">
           {activeTab === 'chat' && (
             <div className="h-full flex gap-4">
-              <div className="w-64 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col justify-between">
+              <div className="w-64 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-4 overflow-y-auto">
                 <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 px-2">الأقسام والغرف</h3>
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">الأقسام والغرف</h3>
                   <div className="space-y-1">
                     {CHANNELS.map((channel) => {
                       const isUnlocked = !channel.private || unlockedChannels.includes(channel.id);
@@ -915,80 +946,161 @@ export default function App() {
                     })}
                   </div>
                 </div>
+
+                {/* قائمة المحادثات الخاصة الفردية */}
+                <div className="border-t border-slate-800 pt-3">
+                  <div className="flex items-center justify-between px-2 mb-2">
+                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">المحادثات الخاصة</h3>
+                    <button
+                      onClick={() => setActiveTab('team')}
+                      title="بدء محادثة جديدة من دليل الأعضاء"
+                      className="text-[10px] text-amber-400 hover:underline font-bold"
+                    >
+                      + جديد
+                    </button>
+                  </div>
+
+                  {dmPartnerList.length === 0 ? (
+                    <p className="text-[11px] text-slate-500 px-2 leading-relaxed">
+                      اضغط على "محادثة خاصة" عند أي عضو في دليل الفريق لبدء محادثة فردية معه.
+                    </p>
+                  ) : (
+                    <div className="space-y-1">
+                      {dmPartnerList.map((member) => {
+                        const dmId = getDirectChannelId(currentUser.id, member.id);
+                        const online = isMemberOnline(member.id);
+                        const msgCount = messages.filter((m) => m.channelId === dmId).length;
+                        return (
+                          <button
+                            key={member.id}
+                            onClick={() => handleStartDirectChat(member)}
+                            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
+                              activeChannel === dmId
+                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                                : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2 truncate">
+                              <span className={`w-2 h-2 rounded-full flex-shrink-0 ${online ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
+                              <span className="truncate">{member.name}</span>
+                            </div>
+                            {msgCount > 0 && (
+                              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
+                                {msgCount}
+                              </span>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl flex flex-col overflow-hidden relative">
                 <div className="px-5 py-3 border-b border-slate-800 bg-slate-950/40 flex flex-col gap-2">
                   <div className="flex flex-wrap justify-between items-center gap-2">
-                    <div className="flex items-center space-x-2 space-x-reverse">
-                      <Hash className="w-4 h-4 text-amber-400" />
-                      <span className="text-sm font-bold text-slate-200">
-                        {CHANNELS.find((c) => c.id === activeChannel)?.name}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center bg-slate-900 p-1 rounded-lg border border-slate-800">
-                      <button
-                        onClick={() => setChannelSubTab('chat')}
-                        className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                          channelSubTab === 'chat'
-                            ? 'bg-amber-500 text-slate-950'
-                            : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        <MessageSquare className="w-3.5 h-3.5" />
-                        <span>المحادثة</span>
-                      </button>
-                      <button
-                        onClick={() => setChannelSubTab('tasks')}
-                        className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                          channelSubTab === 'tasks'
-                            ? 'bg-amber-500 text-slate-950'
-                            : 'text-slate-400 hover:text-slate-200'
-                        }`}
-                      >
-                        <Kanban className="w-3.5 h-3.5" />
-                        <span>مهام القسم ({currentChannelTasks.length})</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-800/60">
-                    <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                      <Users className="w-3 h-3 text-emerald-400" /> أعضاء القسم:
-                    </span>
-                    {activeMembersInChannel.length === 0 ? (
-                      <span className="text-[11px] text-slate-500">لا يوجد أعضاء مسجلون بعد</span>
+                    {isDirectMessage && dmPartner ? (
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-xs">
+                          {dmPartner.name.charAt(0)}
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-slate-100">{dmPartner.name}</span>
+                            <span className={`text-[10px] px-2 py-0.5 rounded-full flex items-center gap-1 ${isMemberOnline(dmPartner.id) ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${isMemberOnline(dmPartner.id) ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
+                              {isMemberOnline(dmPartner.id) ? 'متواجد الآن' : 'غير متصل'}
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-400">{dmPartner.role}</p>
+                        </div>
+                      </div>
                     ) : (
-                      activeMembersInChannel.map((member) => {
-                        const online = isMemberOnline(member.id);
-                        return (
-                          <span
-                            key={member.id}
-                            className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-200 border border-slate-700/80 flex items-center gap-1"
-                          >
-                            <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
-                            {member.name}
+                      <>
+                        <div className="flex items-center space-x-2 space-x-reverse">
+                          <Hash className="w-4 h-4 text-amber-400" />
+                          <span className="text-sm font-bold text-slate-200">
+                            {CHANNELS.find((c) => c.id === activeChannel)?.name}
                           </span>
-                        );
-                      })
+                        </div>
+
+                        <div className="flex items-center bg-slate-900 p-1 rounded-lg border border-slate-800">
+                          <button
+                            onClick={() => setChannelSubTab('chat')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                              channelSubTab === 'chat'
+                                ? 'bg-amber-500 text-slate-950'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                            <span>المحادثة</span>
+                          </button>
+                          <button
+                            onClick={() => setChannelSubTab('tasks')}
+                            className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                              channelSubTab === 'tasks'
+                                ? 'bg-amber-500 text-slate-950'
+                                : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                          >
+                            <Kanban className="w-3.5 h-3.5" />
+                            <span>مهام القسم ({currentChannelTasks.length})</span>
+                          </button>
+                        </div>
+                      </>
                     )}
                   </div>
+
+                  {!isDirectMessage && (
+                    <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-800/60">
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                        <Users className="w-3 h-3 text-emerald-400" /> أعضاء القسم:
+                      </span>
+                      {activeMembersInChannel.length === 0 ? (
+                        <span className="text-[11px] text-slate-500">لا يوجد أعضاء مسجلون بعد</span>
+                      ) : (
+                        activeMembersInChannel.map((member) => {
+                          const online = isMemberOnline(member.id);
+                          return (
+                            <span
+                              key={member.id}
+                              className="text-[10px] px-2 py-0.5 rounded-full bg-slate-800/90 text-slate-200 border border-slate-700/80 flex items-center gap-1"
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
+                              {member.name}
+                            </span>
+                          );
+                        })
+                      )}
+                    </div>
+                  )}
                 </div>
 
-                {channelSubTab === 'chat' ? (
+                {(isDirectMessage || channelSubTab === 'chat') ? (
                   <>
                     <div className="flex-1 overflow-y-auto p-4 space-y-3">
                       {currentMessages.length === 0 ? (
-                        <div className="h-full flex items-center justify-center text-slate-500 text-sm">
-                          لا يوجد رسائل بعد في غرفة هذا القسم. اكتب رسالة لترسلها لأعضاء الفريق مباشرة!
+                        <div className="h-full flex items-center justify-center text-slate-500 text-sm text-center px-4">
+                          {isDirectMessage && dmPartner
+                            ? `هذه بداية محادثتك الخاصة والمباشرة مع ${dmPartner.name}. اكتب رسالتك بالأسفل!`
+                            : 'لا يوجد رسائل بعد في غرفة هذا القسم. اكتب رسالة لترسلها لأعضاء الفريق مباشرة!'}
                         </div>
                       ) : (
                         currentMessages.map((msg) => {
-                          const canDeleteMessage = msg.senderId === currentUser.id || msg.sender === currentUser.name || isManagementUser;
+                          const isMine = msg.senderId === currentUser.id;
+                          const canDeleteMessage = isMine || msg.sender === currentUser.name || (!isDirectMessage && isManagementUser);
                           return (
-                            <div key={msg.id} className="flex flex-col bg-slate-950/60 border border-slate-800/80 p-3 rounded-lg max-w-xl group">
-                              <div className="flex items-center justify-between mb-1">
+                            <div
+                              key={msg.id}
+                              className={`flex flex-col border p-3 rounded-xl max-w-xl ${
+                                isMine
+                                  ? 'bg-amber-500/10 border-amber-500/30 mr-auto'
+                                  : 'bg-slate-950/70 border-slate-800/80 ml-auto'
+                              }`}
+                            >
+                              <div className="flex items-center justify-between gap-4 mb-1">
                                 <div className="flex items-center gap-1.5">
                                   <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] flex items-center justify-center font-bold">
                                     {msg.sender.charAt(0)}
@@ -1020,7 +1132,11 @@ export default function App() {
                         type="text"
                         value={inputMessage}
                         onChange={(e) => setInputMessage(e.target.value)}
-                        placeholder={`أرسل رسالة فورية إلى ${CHANNELS.find((c) => c.id === activeChannel)?.name}...`}
+                        placeholder={
+                          isDirectMessage && dmPartner
+                            ? `اكتب رسالة خاصة إلى ${dmPartner.name}...`
+                            : `أرسل رسالة فورية إلى ${CHANNELS.find((c) => c.id === activeChannel)?.name}...`
+                        }
                         className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500"
                       />
                       <button
@@ -1583,6 +1699,7 @@ export default function App() {
               {TEAM_MEMBERS.map((member) => {
                 const hasCustomPass = Boolean(userPasswords[member.id]);
                 const online = isMemberOnline(member.id);
+                const isSelf = currentUser.id === member.id;
                 return (
                   <div key={member.id} className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between space-y-4">
                     <div className="flex items-center space-x-3 space-x-reverse">
@@ -1620,10 +1737,21 @@ export default function App() {
                         <Mail className="w-3.5 h-3.5 text-amber-500" />
                         <span>{member.email}</span>
                       </div>
+
+                      {!isSelf && (
+                        <button
+                          onClick={() => handleStartDirectChat(member)}
+                          className="w-full mt-2 py-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 rounded-lg text-xs font-bold border border-amber-500/30 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <MessageCircle className="w-3.5 h-3.5" />
+                          <span>محادثة خاصة</span>
+                        </button>
+                      )}
+
                       {isManagementUser && hasCustomPass && (
                         <button
                           onClick={() => handleResetMemberPassword(member.id, member.name)}
-                          className="w-full mt-2 py-1.5 bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 rounded-lg text-[11px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                          className="w-full mt-1.5 py-1.5 bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 rounded-lg text-[11px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
                         >
                           <RotateCcw className="w-3 h-3" />
                           <span>إعادة ضبط الرمز السري (إذا نسيه)</span>
