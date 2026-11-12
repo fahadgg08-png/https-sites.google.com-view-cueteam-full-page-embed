@@ -1,4 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import {
+  getFirestore,
+  doc,
+  setDoc,
+  onSnapshot
+} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import {
   Film,
   Kanban,
@@ -17,56 +24,21 @@ import {
   Cloud,
   Check,
   Clock,
-  Shield,
   FileText
 } from 'lucide-react';
 
-const createGlobalCloudSync = () => {
-  let listeners = new Set();
-  
-  const saveToCloud = async (data) => {
-    try {
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('cue_global_store', JSON.stringify(data));
-        window.dispatchEvent(new CustomEvent('cue_cloud_update', { detail: data }));
-      }
-    } catch (err) {
-      console.warn("Cloud Sync Save Warning:", err);
-    }
-  };
-
-  const loadFromCloud = () => {
-    try {
-      if (typeof window !== 'undefined') {
-        const saved = localStorage.getItem('cue_global_store');
-        return saved ? JSON.parse(saved) : null;
-      }
-    } catch (err) {}
-    return null;
-  };
-
-  return {
-    saveToCloud,
-    loadFromCloud,
-    subscribe: (callback) => {
-      listeners.add(callback);
-      const handler = (e) => {
-        if (e.detail) callback(e.detail);
-      };
-      if (typeof window !== 'undefined') {
-        window.addEventListener('cue_cloud_update', handler);
-      }
-      return () => {
-        listeners.delete(callback);
-        if (typeof window !== 'undefined') {
-          window.removeEventListener('cue_cloud_update', handler);
-        }
-      };
-    }
-  };
+const firebaseConfig = {
+  apiKey: "AIzaSyB4oVmgfNYFTxhajHnmtBtGXCPE80wTdEI",
+  authDomain: "team-cue.firebaseapp.com",
+  projectId: "team-cue",
+  storageBucket: "team-cue.firebasestorage.app",
+  messagingSenderId: "440352265117",
+  appId: "1:440352265117:web:5c7844a2af2e430ab19574"
 };
 
-const cloudSync = createGlobalCloudSync();
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const workspaceDocRef = doc(db, 'workspaces', 'team_cue_main');
 
 const TEAM_MEMBERS = [
   { id: 'fahad', name: 'فهد سليمان السعود', role: 'Founder | Management Team | Head of Art Department', status: 'online', avatar: '', phone: '0541105416', email: 'fahadgg08@gmail.com', password: 'cue2026' },
@@ -145,27 +117,39 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [tasks, setTasks] = useState(INITIAL_TASKS);
   const [assets, setAssets] = useState([]);
+  const [syncStatus, setSyncStatus] = useState('جاري الاتصال...');
 
   useEffect(() => {
-    const cloudData = cloudSync.loadFromCloud();
-    if (cloudData) {
-      if (cloudData.messages) setMessages(cloudData.messages);
-      if (cloudData.tasks) setTasks(cloudData.tasks);
-      if (cloudData.callSheets) setCallSheets(cloudData.callSheets);
-      if (cloudData.assets) setAssets(cloudData.assets);
-    }
+    const unsubscribe = onSnapshot(
+      workspaceDocRef,
+      (docSnap) => {
+        setSyncStatus('متصل لحظياً (Firebase Live)');
+        if (docSnap.exists()) {
+          const data = docSnap.data();
+          if (data.messages !== undefined) setMessages(data.messages);
+          if (data.tasks !== undefined) setTasks(data.tasks);
+          if (data.callSheets !== undefined) setCallSheets(data.callSheets);
+          if (data.assets !== undefined) setAssets(data.assets);
+        } else {
+          setDoc(workspaceDocRef, {
+            messages: [],
+            tasks: INITIAL_TASKS,
+            callSheets: INITIAL_CALL_SHEETS,
+            assets: [],
+            lastUpdated: Date.now()
+          });
+        }
+      },
+      (error) => {
+        console.error('Firestore Sync Error:', error);
+        setSyncStatus('خطأ في المزامنة');
+      }
+    );
 
-    const unsub = cloudSync.subscribe((data) => {
-      if (data.messages) setMessages(data.messages);
-      if (data.tasks) setTasks(data.tasks);
-      if (data.callSheets) setCallSheets(data.callSheets);
-      if (data.assets) setAssets(data.assets);
-    });
-
-    return () => unsub();
+    return () => unsubscribe();
   }, []);
 
-  const updateGlobalStore = (newPartialState) => {
+  const updateGlobalStore = async (newPartialState) => {
     const updatedState = {
       messages: newPartialState.messages !== undefined ? newPartialState.messages : messages,
       tasks: newPartialState.tasks !== undefined ? newPartialState.tasks : tasks,
@@ -173,7 +157,11 @@ export default function App() {
       assets: newPartialState.assets !== undefined ? newPartialState.assets : assets,
       lastUpdated: Date.now()
     };
-    cloudSync.saveToCloud(updatedState);
+    try {
+      await setDoc(workspaceDocRef, updatedState, { merge: true });
+    } catch (err) {
+      console.error('Failed to save to Firestore:', err);
+    }
   };
 
   const handleAddAsset = (e) => {
@@ -514,7 +502,7 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             <span className="text-[11px] px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1.5 font-semibold">
-              <Cloud className="w-3.5 h-3.5" /> الخدمة السحابية نشطة (Free Cloud Sync)
+              <Cloud className="w-3.5 h-3.5" /> {syncStatus}
             </span>
           </div>
         </header>
