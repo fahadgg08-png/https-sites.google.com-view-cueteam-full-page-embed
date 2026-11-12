@@ -144,12 +144,11 @@ function TeamLogo({ size = 'md' }) {
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null);
   const [pendingUser, setPendingUser] = useState(null);
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [authMode, setAuthMode] = useState('login');
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
 
-  // حالات تسجيل عضو جديد
   const [customMembers, setCustomMembers] = useState([]);
   const [regName, setRegName] = useState('');
   const [regRole, setRegRole] = useState('Art Department');
@@ -221,7 +220,6 @@ export default function App() {
   const [enteredPasscode, setEnteredPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
 
-  // دمج الأعضاء الأساسيين مع الأعضاء الجدد المسجلين سحابياً
   const allTeamMembers = [...INITIAL_TEAM_MEMBERS, ...customMembers];
 
   useEffect(() => {
@@ -359,7 +357,6 @@ export default function App() {
 
   const isManagementUser = currentUser?.role?.includes('Management Team');
 
-  // تسجيل عضو جديد بنفسه
   const handleSelfRegister = async (e) => {
     e.preventDefault();
     setRegError('');
@@ -1116,9 +1113,10 @@ export default function App() {
           </div>
 
           <div className="flex items-center gap-2">
-            {isManagementUser && activeTab === 'team' && (
+            {/* يظهر رمز الدعوة حصرياً لعضو الإدارة */}
+            {isManagementUser && (
               <span className="text-[11px] px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-full font-mono">
-                رمز دعوة الأعضاء: {TEAM_INVITE_CODE}
+                رمز الدعوة: {TEAM_INVITE_CODE}
               </span>
             )}
             <span className="text-[11px] px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1.5 font-semibold">
