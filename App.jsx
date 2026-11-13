@@ -129,7 +129,7 @@ const INITIAL_PROJECTS = [
     id: 'proj_1',
     title: 'المعزوفة - فيلم قصير',
     description: 'ملفات السيناريو، الستوري بورد، ومقاطع التصوير',
-    status: 'current', // 'current' or 'completed'
+    status: 'current',
     budgetTotal: '15,000 ريال',
     createdBy: 'فهد',
     date: '2026-11-12'
@@ -179,17 +179,6 @@ export default function App() {
 
   const [customMembers, setCustomMembers] = useState([]);
   const [memberRoles, setMemberRoles] = useState({});
-  const [editingRoleMember, setEditingRoleMember] = useState(null);
-  const [newRoleInput, setNewRoleInput] = useState('');
-
-  const [regName, setRegName] = useState('');
-  const [regRole, setRegRole] = useState('Art Department');
-  const [regPhone, setRegPhone] = useState('');
-  const [regEmail, setRegEmail] = useState('');
-  const [regPassword, setRegPassword] = useState('');
-  const [regInviteCode, setRegInviteCode] = useState('');
-  const [regError, setRegError] = useState('');
-
   const [userPasswords, setUserPasswords] = useState({});
   const [onlinePresence, setOnlinePresence] = useState({});
   const [nowTick, setNowTick] = useState(Date.now());
@@ -217,41 +206,39 @@ export default function App() {
   const [newPollQuestion, setNewPollQuestion] = useState('');
   const [newPollOptions, setNewPollOptions] = useState(['', '']);
 
-  // Project library tabs: 'current' vs 'completed'
+  // Project Library States
   const [projectsTab, setProjectsTab] = useState('current');
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [projectSubTab, setProjectSubTab] = useState('files'); // 'files', 'cast', 'shotlist', 'callsheets', 'budget'
+  const [projectSubTab, setProjectSubTab] = useState('files');
 
-  // Production Directory (قوائم الموارد لقسم الإنتاج)
-  const [productionDirectoryTab, setProductionDirectoryTab] = useState('actors'); // 'actors', 'companies', 'dps', 'lighting'
-  
-  // Production directory data lists
+  // Production Directory States
+  const [productionDirectoryTab, setProductionDirectoryTab] = useState('actors');
   const [prodActors, setProdActors] = useState([
-    { id: 'pa_1', name: 'محمد العتيبي', phone: '0500000000', notes: 'ممثل دراما وتراجيديا ممتاز' }
+    { id: 'pa_1', name: 'محمد العتيبي', phone: '0500000000', notes: 'ممثل دراما وتراجيديا' }
   ]);
   const [prodCompanies, setProdCompanies] = useState([
-    { id: 'pc_1', name: 'شركة ساديو للإنتاج', contact: '0560000000', notes: 'تأجير معدات واستديوهات' }
+    { id: 'pc_1', name: 'شركة ساديو للإنتاج', contact: '0560000000', notes: 'تأجير استديوهات ومعدات' }
   ]);
   const [prodDPs, setProdDPs] = useState([
     { id: 'pd_1', name: 'عبدالعزيز (مدير تصوير)', contact: '0550000000', notes: 'خبير إضاءة سينمائية' }
   ]);
   const [prodLighting, setProdLighting] = useState([
-    { id: 'pl_1', name: 'تريق إضاءة الرياض', contact: '0501111111', notes: 'أجهزة Arri و Aputure' }
+    { id: 'pl_1', name: 'تريق إضاءة الرياض', contact: '0501111111', notes: 'أجهزة Arri' }
   ]);
 
-  // Art Department specific tabs: 'treatment', 'breakdown', 'invoices'
+  // Art Department States
   const [artSubTab, setArtSubTab] = useState('treatment');
   const [artTreatments, setArtTreatments] = useState([
-    { id: 'at_1', title: 'تريتمنت ألوان المعزوفة', desc: 'استخدام درجات الدافئ (Warm Amber) مع ظل داكن.', author: 'فهد السعود' }
+    { id: 'at_1', title: 'تريتمنت ألوان المعزوفة', desc: 'درجات الدافئ (Warm Amber) مع ظل داكن.', author: 'فهد السعود' }
   ]);
   const [artBreakdowns, setArtBreakdowns] = useState([
-    { id: 'ab_1', scene: 'المشهد 1', items: 'طاولة خشبية قديمة، فنجان قهوة نحاس، إضاءة جانبية', status: 'جاهز' }
+    { id: 'ab_1', scene: 'المشهد 1', items: 'طاولة خشبية قديمة، فنجان قهوة نحاس', status: 'جاهز' }
   ]);
   const [artInvoices, setArtInvoices] = useState([
     { id: 'ai_1', title: 'شراء إكسسوارات من سوق الديرة', amount: '450 ريال', date: '2026-11-10' }
   ]);
 
-  // General Budget (Management only)
+  // General Budget (Management Only)
   const [budgetItems, setBudgetItems] = useState([
     { id: 'b_1', title: 'إيجار معدات الإضاءة والكاميرات', category: 'إنتاج', amount: '4500', type: 'مصروف', date: '2026-11-10' }
   ]);
@@ -259,15 +246,11 @@ export default function App() {
   // Calendar filter state
   const [calendarFilter, setCalendarFilter] = useState('all');
 
-  // Other general states
   const [shotLists, setShotLists] = useState([
     { id: 'sl_1', projectId: 'proj_1', scene: 'المشهد 1', shotNum: '1', shotSize: 'Wide Shot (WS)', movement: 'Panning', lens: '35mm', description: 'لقطة تأسيسية', assignedTo: 'عبدالعزيز' }
   ]);
   const [castList, setCastList] = useState([
     { id: 'cast_1', projectId: 'proj_1', characterName: 'سلطان', actorName: 'محمد العتيبي', phone: '0500000000', costumeNotes: 'بدلة رسمية', rehearsalTime: 'الخميس 4 عصراً' }
-  ]);
-  const [propsInventory, setPropsInventory] = useState([
-    { id: 'prop_1', name: 'كرسي خشبي عتيق', category: 'أثاث', status: 'متاح', location: 'المستودع أ', assignedTo: 'فهد' }
   ]);
   const [callSheets, setCallSheets] = useState(INITIAL_CALL_SHEETS);
   const [calendarEvents, setCalendarEvents] = useState(INITIAL_EVENTS);
@@ -311,6 +294,10 @@ export default function App() {
   const [newChanName, setNewChanName] = useState('');
   const [newChanCode, setNewChanCode] = useState('');
 
+  const [passcodeModalChannel, setPasscodeModalChannel] = useState(null);
+  const [enteredPasscode, setEnteredPasscode] = useState('');
+  const [passcodeError, setPasscodeError] = useState('');
+
   const [emailNotificationLog, setEmailNotificationLog] = useState('');
 
   const rawTeamMembers = [...INITIAL_TEAM_MEMBERS, ...customMembers];
@@ -326,20 +313,16 @@ export default function App() {
 
   const [unlockedChannels, setUnlockedChannels] = useState(() => {
     try {
-      const saved = localStorage.getItem('cue_unlocked_channels_v3');
+      const saved = localStorage.getItem('cue_unlocked_channels_v4');
       return saved ? JSON.parse(saved) : {};
     } catch {
       return {};
     }
   });
 
-  const [passcodeModalChannel, setPasscodeModalChannel] = useState(null);
-  const [enteredPasscode, setEnteredPasscode] = useState('');
-  const [passcodeError, setPasscodeError] = useState('');
-
   useEffect(() => {
     try {
-      localStorage.setItem('cue_unlocked_channels_v3', JSON.stringify(unlockedChannels));
+      localStorage.setItem('cue_unlocked_channels_v4', JSON.stringify(unlockedChannels));
     } catch {}
   }, [unlockedChannels]);
 
@@ -367,7 +350,6 @@ export default function App() {
           if (data.polls !== undefined) setPolls(data.polls);
           if (data.shotLists !== undefined) setShotLists(data.shotLists);
           if (data.castList !== undefined) setCastList(data.castList);
-          if (data.propsInventory !== undefined) setPropsInventory(data.propsInventory);
           if (data.budgetItems !== undefined) setBudgetItems(data.budgetItems);
           if (data.prodActors !== undefined) setProdActors(data.prodActors);
           if (data.prodCompanies !== undefined) setProdCompanies(data.prodCompanies);
@@ -394,7 +376,6 @@ export default function App() {
             polls: [],
             shotLists: [],
             castList: [],
-            propsInventory: [],
             budgetItems: [],
             prodActors: [],
             prodCompanies: [],
@@ -459,7 +440,6 @@ export default function App() {
       polls: newPartialState.polls !== undefined ? newPartialState.polls : polls,
       shotLists: newPartialState.shotLists !== undefined ? newPartialState.shotLists : shotLists,
       castList: newPartialState.castList !== undefined ? newPartialState.castList : castList,
-      propsInventory: newPartialState.propsInventory !== undefined ? newPartialState.propsInventory : propsInventory,
       budgetItems: newPartialState.budgetItems !== undefined ? newPartialState.budgetItems : budgetItems,
       prodActors: newPartialState.prodActors !== undefined ? newPartialState.prodActors : prodActors,
       prodCompanies: newPartialState.prodCompanies !== undefined ? newPartialState.prodCompanies : prodCompanies,
@@ -480,6 +460,33 @@ export default function App() {
   const activeUserObj = allTeamMembers.find((m) => m.id === currentUser?.id) || currentUser;
   const isManagementUser = activeUserObj?.role?.includes('Management Team') || activeUserObj?.id === 'fahad';
 
+  const handleSelectChannel = (channel) => {
+    const currentPasscode = channel.code;
+    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === currentPasscode);
+    if (channel.private && !isUnlocked) {
+      setPasscodeModalChannel(channel);
+      setEnteredPasscode('');
+      setPasscodeError('');
+    } else {
+      setActiveChannel(channel.id);
+      setMobileSidebarOpen(false);
+    }
+  };
+
+  const handleVerifyPasscode = (e) => {
+    e.preventDefault();
+    if (!passcodeModalChannel) return;
+    if (enteredPasscode === passcodeModalChannel.code) {
+      setUnlockedChannels((prev) => ({ ...prev, [passcodeModalChannel.id]: passcodeModalChannel.code }));
+      setActiveChannel(passcodeModalChannel.id);
+      setPasscodeModalChannel(null);
+      setEnteredPasscode('');
+      setPasscodeError('');
+    } else {
+      setPasscodeError('رمز الدخول غير صحيح!');
+    }
+  };
+
   // Project Handlers
   const handleAddProject = (e) => {
     e.preventDefault();
@@ -488,7 +495,7 @@ export default function App() {
       id: 'proj_' + Date.now(),
       title: newProjectTitle.trim(),
       description: newProjectDesc.trim() || 'ملفات العمل',
-      status: newProjectStatus, // 'current' or 'completed'
+      status: newProjectStatus,
       budgetTotal: newProjectBudget.trim() || 'غير محدد',
       createdBy: activeUserObj.name.split(' ')[0],
       date: new Date().toLocaleDateString('ar-SA')
@@ -557,11 +564,11 @@ export default function App() {
       date: newCsDate.trim() || 'قريباً',
       location: newCsLocation.trim(),
       mapLink: newCsMapLink.trim() || '',
-      parkingNotes: newCsParking.trim() || 'المواقف المعتمدة للطاقم',
+      parkingNotes: newCsParking.trim() || 'المواقف المعتمدة',
       callTime: newCsCallTime.trim() || '07:00 صباحاً',
       weather: 'معتدل',
       scenes: newCsScenes.trim() || 'جميع مشاهد اليوم',
-      importantNotes: newCsNotes.trim() || 'الالتزام بمواعيد التجمع والزي.',
+      importantNotes: newCsNotes.trim() || 'الالتزام بمواعيد التجمع.',
       checkedInMembers: []
     };
     const next = [newCs, ...callSheets];
@@ -772,7 +779,7 @@ export default function App() {
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium ${activeTab === 'chat' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800'}`}
             >
               <MessageSquare className="w-4 h-4" />
-              <span>الأقسام والمحادثات</span>
+              <span>الأقسام والغرف</span>
             </button>
 
             <button
@@ -884,19 +891,25 @@ export default function App() {
                 <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider px-2">الأقسام والغرف</h3>
                 <div className="space-y-1">
                   {allChannels.map((channel) => {
+                    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === channel.code);
                     const IconComponent = channel.icon || Hash;
                     return (
                       <div
                         key={channel.id}
-                        onClick={() => setActiveChannel(channel.id)}
+                        onClick={() => handleSelectChannel(channel)}
                         className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium cursor-pointer ${
                           activeChannel === channel.id ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800'
                         }`}
                       >
                         <div className="flex items-center space-x-2 space-x-reverse">
-                          <IconComponent className="w-3.5 h-3.5 text-amber-400" />
+                          <IconComponent className={`w-3.5 h-3.5 ${channel.private && !isUnlocked ? 'text-red-400' : 'text-amber-400'}`} />
                           <span>{channel.name}</span>
                         </div>
+                        {channel.private && (
+                          <span className={`text-[10px] px-1.5 py-0.5 rounded ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                            {isUnlocked ? 'مفتوح' : 'مشفر'}
+                          </span>
+                        )}
                       </div>
                     );
                   })}
@@ -966,7 +979,7 @@ export default function App() {
                         onClick={() => setProjectsTab('current')}
                         className={`px-4 py-2 rounded-lg text-xs font-bold transition-colors ${projectsTab === 'current' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                       >
-                        العمال القائمة ({projects.filter(p => p.status === 'current').length})
+                        الأعمال القائمة ({projects.filter(p => p.status === 'current').length})
                       </button>
                       <button
                         onClick={() => setProjectsTab('completed')}
@@ -993,7 +1006,7 @@ export default function App() {
                           required
                           value={newProjectTitle}
                           onChange={(e) => setNewProjectTitle(e.target.value)}
-                          placeholder="اسم العمل (مثال: فيلم قصير...)"
+                          placeholder="اسم العمل..."
                           className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
                         />
                         <select
@@ -1016,7 +1029,7 @@ export default function App() {
                         type="text"
                         value={newProjectDesc}
                         onChange={(e) => setNewProjectDesc(e.target.value)}
-                        placeholder="وصف مختصر للعمل..."
+                        placeholder="وصف مختصر..."
                         className="w-full bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
                       />
                       <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-2.5 rounded-xl">
@@ -1067,7 +1080,7 @@ export default function App() {
                   </div>
                 </>
               ) : (
-                /* PROJECT WORKSPACE (CONTAINS EVERYTHING FOR THIS WORK) */
+                /* PROJECT WORKSPACE */
                 <div className="space-y-6">
                   <div className="flex flex-wrap justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl gap-3">
                     <div className="flex items-center gap-3">
@@ -1080,7 +1093,6 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Sub-tabs inside the project folder */}
                     <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 flex-wrap">
                       <button
                         onClick={() => setProjectSubTab('files')}
@@ -1098,7 +1110,7 @@ export default function App() {
                         onClick={() => setProjectSubTab('shotlist')}
                         className={`px-3 py-1.5 rounded-lg text-xs font-bold ${projectSubTab === 'shotlist' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                       >
-                        Shot List والستوري بورد
+                        Shot List
                       </button>
                       <button
                         onClick={() => setProjectSubTab('callsheets')}
@@ -1109,11 +1121,10 @@ export default function App() {
                     </div>
                   </div>
 
-                  {/* PROJECT SUB-TAB 1: FILES & SCRIPT */}
                   {projectSubTab === 'files' && (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-amber-400">ملفات السيناريو والمستندات المرتبطة بالعمل</h4>
+                        <h4 className="text-xs font-bold text-amber-400">ملفات السيناريو والمستندات</h4>
                         <button
                           onClick={() => setShowAddAsset(!showAddAsset)}
                           className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1"
@@ -1130,7 +1141,7 @@ export default function App() {
                               required
                               value={newAssetTitle}
                               onChange={(e) => setNewAssetTitle(e.target.value)}
-                              placeholder="اسم الملف (مثال: النسخة النهائية للسيناريو.pdf)"
+                              placeholder="اسم الملف..."
                               className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
                             />
                             <select
@@ -1147,7 +1158,7 @@ export default function App() {
                               type="url"
                               value={newAssetUrl}
                               onChange={(e) => setNewAssetUrl(e.target.value)}
-                              placeholder="رابط السحابة (Google Drive / PDF Link)..."
+                              placeholder="رابط السحابة..."
                               className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
                             />
                           </div>
@@ -1160,7 +1171,7 @@ export default function App() {
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {assets.filter(a => a.projectId === selectedProjectId).length === 0 ? (
                           <div className="col-span-3 bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                            لا توجد ملفات مرفقة لهذا المشروع حتى الآن.
+                            لا توجد ملفات مرفقة لهذا المشروع.
                           </div>
                         ) : (
                           assets.filter(a => a.projectId === selectedProjectId).map(asset => (
@@ -1190,16 +1201,13 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* PROJECT SUB-TAB 2: CAST */}
                   {projectSubTab === 'cast' && (
                     <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-amber-400">طاقم التمثيل والشخصيات الخاصة بهذا العمل</h4>
-                      </div>
+                      <h4 className="text-xs font-bold text-amber-400">طاقم التمثيل والشخصيات</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {castList.filter(c => c.projectId === selectedProjectId || !c.projectId).length === 0 ? (
                           <div className="col-span-2 bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                            لا يوجد ممثلون مضافون لهذا المشروع.
+                            لا يوجد ممثلون مضافون.
                           </div>
                         ) : (
                           castList.filter(c => c.projectId === selectedProjectId || !c.projectId).map(c => (
@@ -1215,14 +1223,13 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* PROJECT SUB-TAB 3: SHOT LIST */}
                   {projectSubTab === 'shotlist' && (
                     <div className="space-y-4">
-                      <h4 className="text-xs font-bold text-amber-400">الـ Shot List وزوايا الكاميرا الخاصة بهذا العمل</h4>
+                      <h4 className="text-xs font-bold text-amber-400">الـ Shot List وزوايا الكاميرا</h4>
                       <div className="space-y-2">
                         {shotLists.filter(sl => sl.projectId === selectedProjectId || !sl.projectId).length === 0 ? (
                           <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                            لا توجد لقطات مسجلة لهذا المشروع.
+                            لا توجد لقطات مسجلة.
                           </div>
                         ) : (
                           shotLists.filter(sl => sl.projectId === selectedProjectId || !sl.projectId).map(sl => (
@@ -1230,7 +1237,6 @@ export default function App() {
                               <div>
                                 <span className="text-xs font-bold text-amber-400">{sl.scene} - لقطة {sl.shotNum} ({sl.shotSize})</span>
                                 <p className="text-xs text-slate-300 mt-1">{sl.description}</p>
-                                <p className="text-[10px] text-slate-500 mt-0.5">حركة: {sl.movement} • عدسة: {sl.lens}</p>
                               </div>
                             </div>
                           ))
@@ -1239,11 +1245,10 @@ export default function App() {
                     </div>
                   )}
 
-                  {/* PROJECT SUB-TAB 4: CALL SHEETS & MAPS */}
                   {projectSubTab === 'callsheets' && (
                     <div className="space-y-4">
                       <div className="flex justify-between items-center">
-                        <h4 className="text-xs font-bold text-amber-400">جداول الكول شيت وإحداثيات اللوكيشن لهذا العمل</h4>
+                        <h4 className="text-xs font-bold text-amber-400">الكول شيت والإحداثيات</h4>
                         <button
                           onClick={() => setShowAddCallSheet(!showAddCallSheet)}
                           className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1"
@@ -1260,7 +1265,7 @@ export default function App() {
                               required
                               value={newCsDay}
                               onChange={(e) => setNewCsDay(e.target.value)}
-                              placeholder="اليوم الأول / الثاني..."
+                              placeholder="اليوم الأول..."
                               className="bg-slate-950 border border-slate-700 text-slate-200 p-2 rounded-lg"
                             />
                             <input
@@ -1274,24 +1279,17 @@ export default function App() {
                               required
                               value={newCsLocation}
                               onChange={(e) => setNewCsLocation(e.target.value)}
-                              placeholder="موقع التصوير (اللوكيشن)..."
+                              placeholder="موقع التصوير..."
                               className="bg-slate-950 border border-slate-700 text-slate-200 p-2 rounded-lg"
                             />
                             <input
                               type="url"
                               value={newCsMapLink}
                               onChange={(e) => setNewCsMapLink(e.target.value)}
-                              placeholder="رابط إحداثيات الخريطة (Google Maps URL)..."
+                              placeholder="رابط الخريطة..."
                               className="bg-slate-950 border border-slate-700 text-slate-200 p-2 rounded-lg"
                             />
                           </div>
-                          <input
-                            type="text"
-                            value={newCsParking}
-                            onChange={(e) => setNewCsParking(e.target.value)}
-                            placeholder="ملاحظات المواقف والتجمع..."
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-200 p-2 rounded-lg"
-                          />
                           <button type="submit" className="w-full bg-amber-500 text-slate-950 font-bold py-2 rounded-lg">
                             حفظ الكول شيت
                           </button>
@@ -1301,7 +1299,7 @@ export default function App() {
                       <div className="space-y-4">
                         {callSheets.filter(cs => cs.projectId === selectedProjectId).length === 0 ? (
                           <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                            لا توجد جداول كول شيت لهذا المشروع حتى الآن.
+                            لا توجد جداول كول شيت.
                           </div>
                         ) : (
                           callSheets.filter(cs => cs.projectId === selectedProjectId).map(cs => (
@@ -1327,16 +1325,7 @@ export default function App() {
                                     </a>
                                   )}
                                 </div>
-                                <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 flex items-center gap-2">
-                                  <Clock className="w-4 h-4 text-amber-500" />
-                                  <span>وقت التجمع: <strong className="text-amber-400">{cs.callTime}</strong></span>
-                                </div>
                               </div>
-                              {cs.parkingNotes && (
-                                <div className="bg-slate-950 p-2.5 rounded-lg border border-slate-800 text-xs text-slate-300">
-                                  🅿️ <strong>المواقف والتجمع:</strong> {cs.parkingNotes}
-                                </div>
-                              )}
                               <button
                                 onClick={() => handleCheckInCallSheet(cs.id)}
                                 className={`w-full py-2 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 ${
@@ -1357,13 +1346,13 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: PRODUCTION DIRECTORY (قوائم قسم الإنتاج) */}
+          {/* TAB: PRODUCTION DIRECTORY */}
           {activeTab === 'production_dir' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                 <div>
                   <h3 className="text-sm font-bold text-amber-400">دليل وموارد قسم الإنتاج</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">القوائم المعتمدة للممثلين، شركات الإنتاج، المصورين، وتيم الإضاءة للاختيار منها عند البدء بأي عمل</p>
+                  <p className="text-xs text-slate-400 mt-0.5">القوائم المعتمدة للممثلين، شركات الإنتاج، المصورين، وتيم الإضاءة</p>
                 </div>
               </div>
 
@@ -1395,47 +1384,39 @@ export default function App() {
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {productionDirectoryTab === 'actors' && (
-                  prodActors.map(item => (
-                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
-                      <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
-                      <p className="text-xs text-slate-400">📞 الجوال: {item.phone}</p>
-                      <p className="text-xs text-amber-400">{item.notes}</p>
-                    </div>
-                  ))
-                )}
-                {productionDirectoryTab === 'companies' && (
-                  prodCompanies.map(item => (
-                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
-                      <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
-                      <p className="text-xs text-slate-400">📞 التواصل: {item.contact}</p>
-                      <p className="text-xs text-amber-400">{item.notes}</p>
-                    </div>
-                  ))
-                )}
-                {productionDirectoryTab === 'dps' && (
-                  prodDPs.map(item => (
-                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
-                      <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
-                      <p className="text-xs text-slate-400">📞 التواصل: {item.contact}</p>
-                      <p className="text-xs text-amber-400">{item.notes}</p>
-                    </div>
-                  ))
-                )}
-                {productionDirectoryTab === 'lighting' && (
-                  prodLighting.map(item => (
-                    <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
-                      <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
-                      <p className="text-xs text-slate-400">📞 التواصل: {item.contact}</p>
-                      <p className="text-xs text-amber-400">{item.notes}</p>
-                    </div>
-                  ))
-                )}
+                {productionDirectoryTab === 'actors' && prodActors.map(item => (
+                  <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
+                    <p className="text-xs text-slate-400">📞 الجوال: {item.phone}</p>
+                    <p className="text-xs text-amber-400">{item.notes}</p>
+                  </div>
+                ))}
+                {productionDirectoryTab === 'companies' && prodCompanies.map(item => (
+                  <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
+                    <p className="text-xs text-slate-400">📞 التواصل: {item.contact}</p>
+                    <p className="text-xs text-amber-400">{item.notes}</p>
+                  </div>
+                ))}
+                {productionDirectoryTab === 'dps' && prodDPs.map(item => (
+                  <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
+                    <p className="text-xs text-slate-400">📞 التواصل: {item.contact}</p>
+                    <p className="text-xs text-amber-400">{item.notes}</p>
+                  </div>
+                ))}
+                {productionDirectoryTab === 'lighting' && prodLighting.map(item => (
+                  <div key={item.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <h4 className="text-sm font-bold text-slate-100">{item.name}</h4>
+                    <p className="text-xs text-slate-400">📞 التواصل: {item.contact}</p>
+                    <p className="text-xs text-amber-400">{item.notes}</p>
+                  </div>
+                ))}
               </div>
             </div>
           )}
 
-          {/* TAB: ART DEPT (TREATMENT, BREAKDOWN, INVOICES) */}
+          {/* TAB: ART DEPT */}
           {activeTab === 'art_dept' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
@@ -1450,13 +1431,13 @@ export default function App() {
                   onClick={() => setArtSubTab('treatment')}
                   className={`px-4 py-2 rounded-lg text-xs font-bold ${artSubTab === 'treatment' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                  تريتمنت الأرت (Art Treatment)
+                  تريتمنت الأرت
                 </button>
                 <button
                   onClick={() => setArtSubTab('breakdown')}
                   className={`px-4 py-2 rounded-lg text-xs font-bold ${artSubTab === 'breakdown' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                 >
-                  تفريغ الأرت (Art Breakdown)
+                  تفريغ الأرت
                 </button>
                 <button
                   onClick={() => setArtSubTab('invoices')}
@@ -1467,34 +1448,28 @@ export default function App() {
               </div>
 
               <div className="space-y-3">
-                {artSubTab === 'treatment' && (
-                  artTreatments.map(t => (
-                    <div key={t.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
-                      <h4 className="text-sm font-bold text-amber-400">{t.title}</h4>
-                      <p className="text-xs text-slate-200">{t.desc}</p>
-                      <p className="text-[10px] text-slate-500">بواسطة: {t.author}</p>
+                {artSubTab === 'treatment' && artTreatments.map(t => (
+                  <div key={t.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <h4 className="text-sm font-bold text-amber-400">{t.title}</h4>
+                    <p className="text-xs text-slate-200">{t.desc}</p>
+                    <p className="text-[10px] text-slate-500">بواسطة: {t.author}</p>
+                  </div>
+                ))}
+                {artSubTab === 'breakdown' && artBreakdowns.map(b => (
+                  <div key={b.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
+                    <h4 className="text-sm font-bold text-amber-400">{b.scene}</h4>
+                    <p className="text-xs text-slate-200">العناصر المطلوبة: {b.items}</p>
+                  </div>
+                ))}
+                {artSubTab === 'invoices' && artInvoices.map(inv => (
+                  <div key={inv.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center">
+                    <div>
+                      <h4 className="text-sm font-bold text-slate-100">{inv.title}</h4>
+                      <p className="text-[11px] text-slate-400">التاريخ: {inv.date}</p>
                     </div>
-                  ))
-                )}
-                {artSubTab === 'breakdown' && (
-                  artBreakdowns.map(b => (
-                    <div key={b.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-2">
-                      <h4 className="text-sm font-bold text-amber-400">{b.scene}</h4>
-                      <p className="text-xs text-slate-200">العناصر المطلوبة: {b.items}</p>
-                    </div>
-                  ))
-                )}
-                {artSubTab === 'invoices' && (
-                  artInvoices.map(inv => (
-                    <div key={inv.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex justify-between items-center">
-                      <div>
-                        <h4 className="text-sm font-bold text-slate-100">{inv.title}</h4>
-                        <p className="text-[11px] text-slate-400">التاريخ: {inv.date}</p>
-                      </div>
-                      <span className="text-sm font-bold font-mono text-amber-400">{inv.amount}</span>
-                    </div>
-                  ))
-                )}
+                    <span className="text-sm font-bold font-mono text-amber-400">{inv.amount}</span>
+                  </div>
+                ))}
               </div>
             </div>
           )}
@@ -1526,7 +1501,7 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: CALENDAR (SMOOTHER & ENHANCED) */}
+          {/* TAB: CALENDAR */}
           {activeTab === 'calendar' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex flex-col md:flex-row justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl gap-3">
@@ -1633,6 +1608,31 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {/* PASSCODE MODAL */}
+      {passcodeModalChannel && (
+        <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4 text-right">
+            <h3 className="font-bold text-amber-400 text-sm">غرفة مغلقة مشفرة</h3>
+            <p className="text-xs text-slate-400">أدخل الرمز السري للوصول إلى ({passcodeModalChannel.name}):</p>
+            <form onSubmit={handleVerifyPasscode} className="space-y-3">
+              <input
+                type="password"
+                required
+                value={enteredPasscode}
+                onChange={(e) => setEnteredPasscode(e.target.value)}
+                placeholder="الرمز السري..."
+                className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-amber-500"
+              />
+              {passcodeError && <div className="text-xs text-red-400">{passcodeError}</div>}
+              <div className="flex gap-2 pt-1">
+                <button type="button" onClick={() => setPasscodeModalChannel(null)} className="flex-1 bg-slate-800 text-slate-300 py-2 rounded-xl text-xs font-bold">إلغاء</button>
+                <button type="submit" className="flex-1 bg-amber-500 text-slate-950 py-2 rounded-xl text-xs font-bold">دخول</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
