@@ -37,7 +37,14 @@ import {
   MessageCircle,
   UserPlus,
   Calendar as CalendarIcon,
-  UserMinus
+  UserMinus,
+  Menu,
+  ShieldPlus,
+  BellRing,
+  BarChart2,
+  Image as ImageIcon,
+  Shield,
+  Edit3
 } from 'lucide-react';
 
 const TEAM_LOGO_URL = teamLogo;
@@ -78,8 +85,9 @@ const INITIAL_TEAM_MEMBERS = [
   { id: 'leen', name: 'لين محمد الغامدي', role: 'Art Department', status: 'online', avatar: '', phone: '0549811426', email: 'ileen17m@gmail.com' }
 ];
 
-const CHANNELS = [
+const INITIAL_CHANNELS = [
   { id: 'general', name: 'عام - General', icon: Hash, private: false },
+  { id: 'news', name: 'أخبار الفريق الهامة', icon: BellRing, private: false, isNews: true },
   { id: 'director', name: 'غرفة المخرج الخاصة', icon: Lock, private: true, code: '9090' },
   { id: 'management', name: 'قسم الإدارة', icon: Lock, private: true, code: '1010' },
   { id: 'directing', name: 'قسم الإخراج', icon: Lock, private: true, code: '2020' },
@@ -158,6 +166,10 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
 
   const [customMembers, setCustomMembers] = useState([]);
+  const [memberRoles, setMemberRoles] = useState({}); // لتخزين الرتب المحدثة للأعضاء
+  const [editingRoleMember, setEditingRoleMember] = useState(null);
+  const [newRoleInput, setNewRoleInput] = useState('');
+
   const [regName, setRegName] = useState('');
   const [regRole, setRegRole] = useState('Art Department');
   const [regPhone, setRegPhone] = useState('');
@@ -179,13 +191,28 @@ export default function App() {
   const [activeChannel, setActiveChannel] = useState('general');
   const [channelSubTab, setChannelSubTab] = useState('chat');
   const [openedDmUserIds, setOpenedDmUserIds] = useState([]);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [inputMessage, setInputMessage] = useState('');
+  const [imageAttachment, setImageAttachment] = useState(null); // لحفظ الصورة المرفقة مع الرسالة
+
+  // إدارة الرموز السرية للأقسام
+  const [channelPasscodes, setChannelPasscodes] = useState({});
+  const [editingChannelForPasscode, setEditingChannelForPasscode] = useState(null);
+  const [newPasscodeInput, setNewPasscodeInput] = useState('');
+
+  // حالات التصويت (Polls)
+  const [polls, setPolls] = useState([]);
+  const [showAddPollModal, setShowAddPollModal] = useState(false);
+  const [newPollQuestion, setNewPollQuestion] = useState('');
+  const [newPollOptions, setNewPollOptions] = useState(['', '']);
 
   const [newDeptTaskTitle, setNewDeptTaskTitle] = useState('');
   const [newDeptTaskFileName, setNewDeptTaskFileName] = useState('');
   const [newDeptTaskFileUrl, setNewDeptTaskFileUrl] = useState('');
   const [showDeptTaskFileInputs, setShowDeptTaskFileInputs] = useState(false);
+
+  const [emailNotificationLog, setEmailNotificationLog] = useState('');
 
   const [newCsDay, setNewCsDay] = useState('');
   const [newCsDate, setNewCsDate] = useState('');
@@ -200,6 +227,11 @@ export default function App() {
   const [newEventDate, setNewEventDate] = useState('');
   const [newEventColor, setNewEventColor] = useState('amber');
   const [showAddEventModal, setShowAddEventModal] = useState(false);
+
+  const [customChannels, setCustomChannels] = useState([]);
+  const [showAddChannelModal, setShowAddChannelModal] = useState(false);
+  const [newChanName, setNewChanName] = useState('');
+  const [newChanCode, setNewChanCode] = useState('');
 
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -221,12 +253,13 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState('جاري الاتصال...');
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
 
+  // تخزين الأقسام المفتوحة مع الرمز المستخدم للتحقق من تغير الرمز السري
   const [unlockedChannels, setUnlockedChannels] = useState(() => {
     try {
-      const saved = localStorage.getItem('cue_unlocked_channels');
-      return saved ? JSON.parse(saved) : ['general'];
+      const saved = localStorage.getItem('cue_unlocked_channels_v2');
+      return saved ? JSON.parse(saved) : {};
     } catch {
-      return ['general'];
+      return {};
     }
   });
 
@@ -234,11 +267,21 @@ export default function App() {
   const [enteredPasscode, setEnteredPasscode] = useState('');
   const [passcodeError, setPasscodeError] = useState('');
 
-  const allTeamMembers = [...INITIAL_TEAM_MEMBERS, ...customMembers];
+  const rawTeamMembers = [...INITIAL_TEAM_MEMBERS, ...customMembers];
+  // دمج الرتب المحدثة للأعضاء
+  const allTeamMembers = rawTeamMembers.map((m) => ({
+    ...m,
+    role: memberRoles[m.id] !== undefined ? memberRoles[m.id] : m.role
+  }));
+
+  const allChannels = [...INITIAL_CHANNELS, ...customChannels].map((c) => ({
+    ...c,
+    code: channelPasscodes[c.id] !== undefined ? channelPasscodes[c.id] : c.code
+  }));
 
   useEffect(() => {
     try {
-      localStorage.setItem('cue_unlocked_channels', JSON.stringify(unlockedChannels));
+      localStorage.setItem('cue_unlocked_channels_v2', JSON.stringify(unlockedChannels));
     } catch {}
   }, [unlockedChannels]);
 
@@ -259,7 +302,11 @@ export default function App() {
           if (data.userPasswords !== undefined) setUserPasswords(data.userPasswords);
           if (data.onlinePresence !== undefined) setOnlinePresence(data.onlinePresence);
           if (data.customMembers !== undefined) setCustomMembers(data.customMembers);
+          if (data.memberRoles !== undefined) setMemberRoles(data.memberRoles);
           if (data.calendarEvents !== undefined) setCalendarEvents(data.calendarEvents);
+          if (data.customChannels !== undefined) setCustomChannels(data.customChannels);
+          if (data.channelPasscodes !== undefined) setChannelPasscodes(data.channelPasscodes);
+          if (data.polls !== undefined) setPolls(data.polls);
         } else {
           setDoc(workspaceDocRef, {
             messages: [],
@@ -271,7 +318,11 @@ export default function App() {
             userPasswords: {},
             onlinePresence: {},
             customMembers: [],
+            memberRoles: {},
             calendarEvents: INITIAL_EVENTS,
+            customChannels: [],
+            channelPasscodes: {},
+            polls: [],
             lastUpdated: Date.now()
           });
         }
@@ -335,23 +386,6 @@ export default function App() {
     return nowTick - lastSeen < 65000;
   };
 
-  useEffect(() => {
-    if (!currentUser || !activeChannel || activeChannel.startsWith('dm_')) return;
-    const isUnlocked = !CHANNELS.find((c) => c.id === activeChannel)?.private || unlockedChannels.includes(activeChannel);
-    if (!isUnlocked) return;
-
-    const currentList = channelMembers[activeChannel] || [];
-    const alreadyExists = currentList.some((m) => m.id === currentUser.id);
-    if (!alreadyExists) {
-      const updatedMembers = {
-        ...channelMembers,
-        [activeChannel]: [...currentList, { id: currentUser.id, name: currentUser.name }]
-      };
-      setChannelMembers(updatedMembers);
-      updateGlobalStore({ channelMembers: updatedMembers });
-    }
-  }, [currentUser, activeChannel, unlockedChannels]);
-
   const updateGlobalStore = async (newPartialState) => {
     const updatedState = {
       messages: newPartialState.messages !== undefined ? newPartialState.messages : messages,
@@ -362,7 +396,11 @@ export default function App() {
       channelMembers: newPartialState.channelMembers !== undefined ? newPartialState.channelMembers : channelMembers,
       userPasswords: newPartialState.userPasswords !== undefined ? newPartialState.userPasswords : userPasswords,
       customMembers: newPartialState.customMembers !== undefined ? newPartialState.customMembers : customMembers,
+      memberRoles: newPartialState.memberRoles !== undefined ? newPartialState.memberRoles : memberRoles,
       calendarEvents: newPartialState.calendarEvents !== undefined ? newPartialState.calendarEvents : calendarEvents,
+      customChannels: newPartialState.customChannels !== undefined ? newPartialState.customChannels : customChannels,
+      channelPasscodes: newPartialState.channelPasscodes !== undefined ? newPartialState.channelPasscodes : channelPasscodes,
+      polls: newPartialState.polls !== undefined ? newPartialState.polls : polls,
       lastUpdated: Date.now()
     };
     try {
@@ -372,9 +410,9 @@ export default function App() {
     }
   };
 
-  const isManagementUser = currentUser?.role?.includes('Management Team');
+  const activeUserObj = allTeamMembers.find((m) => m.id === currentUser?.id) || currentUser;
+  const isManagementUser = activeUserObj?.role?.includes('Management Team') || activeUserObj?.id === 'fahad';
 
-  // دالة لطرد عضو من القسم الحالي (متاحة للإدارة فقط)
   const handleRemoveMemberFromChannel = async (memberId, memberName) => {
     if (!isManagementUser || activeChannel.startsWith('dm_')) return;
     const currentList = channelMembers[activeChannel] || [];
@@ -387,6 +425,164 @@ export default function App() {
 
     setChannelMembers(updatedChannelMembers);
     await updateGlobalStore({ channelMembers: updatedChannelMembers });
+  };
+
+  const handleCreateCustomChannel = async (e) => {
+    e.preventDefault();
+    if (!newChanName.trim() || !newChanCode.trim() || currentUser?.id !== 'fahad') return;
+
+    const newChannelId = 'dept_' + Date.now();
+    const newChannelObj = {
+      id: newChannelId,
+      name: newChanName.trim(),
+      icon: Lock,
+      private: true,
+      code: newChanCode.trim()
+    };
+
+    const nextCustomChannels = [...customChannels, newChannelObj];
+    setCustomChannels(nextCustomChannels);
+    setUnlockedChannels((prev) => ({ ...prev, [newChannelId]: newChanCode.trim() }));
+    setActiveChannel(newChannelId);
+
+    setNewChanName('');
+    setNewChanCode('');
+    setShowAddChannelModal(false);
+
+    await updateGlobalStore({ customChannels: nextCustomChannels });
+  };
+
+  // تعديل الرمز السري للقسم (إلغاء قفل كل من هم داخله وإجبارهم على إدخال الرمز الجديد)
+  const handleUpdateChannelPasscode = async (e) => {
+    e.preventDefault();
+    if (!editingChannelForPasscode || !newPasscodeInput.trim() || currentUser?.id !== 'fahad') return;
+
+    const chanId = editingChannelForPasscode.id;
+    const newCode = newPasscodeInput.trim();
+
+    const nextPasscodes = { ...channelPasscodes, [chanId]: newCode };
+    setChannelPasscodes(nextPasscodes);
+
+    // إزالة هذا القسم من الأقسام المفتوحة محلياً لإجبار الجميع على إعادة إدخال الرمز الجديد
+    const nextUnlocked = { ...unlockedChannels };
+    delete nextUnlocked[chanId];
+    setUnlockedChannels(nextUnlocked);
+
+    setEditingChannelForPasscode(null);
+    setNewPasscodeInput('');
+
+    await updateGlobalStore({ channelPasscodes: nextPasscodes });
+    alert(`تم تحديث الرمز السري لـ (${editingChannelForPasscode.name}) بنجاح. تم إغلاق القسم على المتواجدين لإدخال الرمز الجديد.`);
+  };
+
+  // تعديل رتب العضو (خاص بفهد)
+  const handleSaveMemberRole = async (e) => {
+    e.preventDefault();
+    if (!editingRoleMember || currentUser?.id !== 'fahad') return;
+
+    const nextRoles = { ...memberRoles, [editingRoleMember.id]: newRoleInput.trim() };
+    setMemberRoles(nextRoles);
+    setEditingRoleMember(null);
+    setNewRoleInput('');
+
+    await updateGlobalStore({ memberRoles: nextRoles });
+  };
+
+  const handleDeleteCustomChannel = async (channelId, e) => {
+    e.stopPropagation();
+    if (currentUser?.id !== 'fahad') return;
+
+    const nextCustomChannels = customChannels.filter((c) => c.id !== channelId);
+    const nextUnlocked = { ...unlockedChannels };
+    delete nextUnlocked[channelId];
+    setUnlockedChannels(nextUnlocked);
+
+    const nextTasks = tasks.filter((t) => t.channelId !== channelId);
+    const nextMessages = messages.filter((m) => m.channelId !== channelId);
+    const nextPolls = polls.filter((p) => p.channelId !== channelId);
+
+    let nextActiveChannel = activeChannel;
+    if (activeChannel === channelId) {
+      nextActiveChannel = 'general';
+    }
+
+    setCustomChannels(nextCustomChannels);
+    setActiveChannel(nextActiveChannel);
+    setTasks(nextTasks);
+    setMessages(nextMessages);
+    setPolls(nextPolls);
+
+    await updateGlobalStore({
+      customChannels: nextCustomChannels,
+      tasks: nextTasks,
+      messages: nextMessages,
+      polls: nextPolls
+    });
+  };
+
+  // دوال التصويت (Polls)
+  const handleCreatePoll = (e) => {
+    e.preventDefault();
+    if (!newPollQuestion.trim() || !currentUser) return;
+    const validOptions = newPollOptions.filter((opt) => opt.trim() !== '');
+    if (validOptions.length < 2) return;
+
+    const activeChanObj = allChannels.find((c) => c.id === activeChannel);
+    const chanName = activeChanObj ? activeChanObj.name : 'القسم';
+
+    const newPollObj = {
+      id: 'poll_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      channelId: activeChannel,
+      question: newPollQuestion.trim(),
+      options: validOptions.map((opt) => ({ text: opt.trim(), votes: [] })),
+      createdBy: activeUserObj.name.split(' ')[0],
+      createdAt: Date.now()
+    };
+
+    const nextPolls = [newPollObj, ...polls];
+    setPolls(nextPolls);
+    updateGlobalStore({ polls: nextPolls });
+
+    setNewPollQuestion('');
+    setNewPollOptions(['', '']);
+    setShowAddPollModal(false);
+
+    setEmailNotificationLog(`📊 تم إنشاء تصويت جديد في (${chanName}) وإرسال إشعار بريدي للأعضاء.`);
+    setTimeout(() => setEmailNotificationLog(''), 6000);
+  };
+
+  const handleVotePoll = (pollId, optionIndex) => {
+    if (!currentUser) return;
+    const nextPolls = polls.map((poll) => {
+      if (poll.id !== pollId) return poll;
+
+      const updatedOptions = poll.options.map((opt, idx) => {
+        let newVotes = [...opt.votes];
+        const hasVotedThis = newVotes.includes(currentUser.id);
+
+        if (idx === optionIndex) {
+          if (hasVotedThis) {
+            newVotes = newVotes.filter((id) => id !== currentUser.id);
+          } else {
+            if (!newVotes.includes(currentUser.id)) newVotes.push(currentUser.id);
+          }
+        } else {
+          newVotes = newVotes.filter((id) => id !== currentUser.id);
+        }
+        return { ...opt, votes: newVotes };
+      });
+
+      return { ...poll, options: updatedOptions };
+    });
+
+    setPolls(nextPolls);
+    updateGlobalStore({ polls: nextPolls });
+  };
+
+  const handleDeletePoll = (pollId) => {
+    const nextPolls = polls.filter((p) => p.id !== pollId);
+    setPolls(nextPolls);
+    updateGlobalStore({ polls: nextPolls });
   };
 
   const handleSelfRegister = async (e) => {
@@ -480,7 +676,7 @@ export default function App() {
       purple: 'بروفات وعروض',
       emerald: 'اجتماعات وإدارة',
       blue: 'مونتاج ومونيتور',
-      rose: 'مواعيد نهائية (Deadlines)'
+      rose: 'موعد نهائي (Deadlines)'
     };
 
     const newEv = {
@@ -498,6 +694,9 @@ export default function App() {
     setNewEventTitle('');
     setNewEventDate('');
     setShowAddEventModal(false);
+
+    setEmailNotificationLog('✉️ تم إرسال إشعار بريدي للفعالية الجديدة لجميع أعضاء الفريق عبر الإيميلات المسجلة.');
+    setTimeout(() => setEmailNotificationLog(''), 6000);
   };
 
   const handleDeleteCalendarEvent = (evId) => {
@@ -515,6 +714,7 @@ export default function App() {
     setActiveChannel(dmChannelId);
     setChannelSubTab('chat');
     setActiveTab('chat');
+    setMobileSidebarOpen(false);
   };
 
   const handleAddProject = (e) => {
@@ -525,7 +725,7 @@ export default function App() {
       id: 'proj_' + Date.now(),
       title: newProjectTitle.trim(),
       description: newProjectDesc.trim() || 'مجلد ملفات وفيديوهات العمل',
-      createdBy: currentUser.name.split(' ')[0],
+      createdBy: activeUserObj.name.split(' ')[0],
       date: new Date().toLocaleDateString('ar-SA')
     };
 
@@ -559,7 +759,7 @@ export default function App() {
       category: newAssetCategory,
       url: newAssetUrl.trim(),
       size: newAssetSize.trim() || 'ملف سحابي',
-      updatedBy: currentUser.name.split(' ')[0],
+      updatedBy: activeUserObj.name.split(' ')[0],
       date: new Date().toLocaleDateString('ar-SA')
     };
 
@@ -579,12 +779,16 @@ export default function App() {
   };
 
   const handleSelectChannel = (channel) => {
-    if (channel.private && !unlockedChannels.includes(channel.id)) {
+    const currentPasscode = channel.code;
+    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === currentPasscode);
+
+    if (channel.private && !isUnlocked) {
       setPasscodeModalChannel(channel);
       setEnteredPasscode('');
       setPasscodeError('');
     } else {
       setActiveChannel(channel.id);
+      setMobileSidebarOpen(false);
     }
   };
 
@@ -592,33 +796,51 @@ export default function App() {
     e.preventDefault();
     if (!passcodeModalChannel) return;
     if (enteredPasscode === passcodeModalChannel.code) {
-      if (!unlockedChannels.includes(passcodeModalChannel.id)) {
-        setUnlockedChannels((prev) => [...prev, passcodeModalChannel.id]);
-      }
+      setUnlockedChannels((prev) => ({ ...prev, [passcodeModalChannel.id]: passcodeModalChannel.code }));
       setActiveChannel(passcodeModalChannel.id);
       setPasscodeModalChannel(null);
       setEnteredPasscode('');
       setPasscodeError('');
+      setMobileSidebarOpen(false);
     } else {
       setPasscodeError('رمز الدخول غير صحيح!');
     }
   };
 
+  // معالجة اختيار صورة وإرفاقها
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImageAttachment(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!inputMessage.trim() || !currentUser) return;
+    if ((!inputMessage.trim() && !imageAttachment) || !currentUser) return;
+
+    const targetChan = allChannels.find((c) => c.id === activeChannel);
+    if (targetChan?.isNews && !isManagementUser) {
+      alert('عذراً، هذا القسم مخصص لنشر الأخبار من الإدارة فقط.');
+      return;
+    }
 
     const newMsg = {
       id: 'msg_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
       channelId: activeChannel,
       senderId: currentUser.id,
-      sender: currentUser.name,
-      senderAvatar: currentUser.avatar,
+      sender: activeUserObj.name,
+      senderAvatar: activeUserObj.avatar,
       text: inputMessage.trim(),
+      image: imageAttachment || '',
       timestamp: new Date().toLocaleTimeString('ar-SA', { hour: '2-digit', minute: '2-digit' })
     };
 
     setInputMessage('');
+    setImageAttachment(null);
 
     const nextMsgs = [...messages, newMsg];
     setMessages(nextMsgs);
@@ -635,6 +857,9 @@ export default function App() {
     e.preventDefault();
     if (!newDeptTaskTitle.trim() || !currentUser) return;
 
+    const activeChanObj = allChannels.find((c) => c.id === activeChannel);
+    const chanName = activeChanObj ? activeChanObj.name : 'القسم';
+
     const newTask = {
       id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
       channelId: activeChannel,
@@ -643,7 +868,7 @@ export default function App() {
       fileUrl: newDeptTaskFileUrl.trim(),
       status: 'todo',
       priority: 'medium',
-      assignee: currentUser.name.split(' ')[0],
+      assignee: activeUserObj.name.split(' ')[0],
       date: new Date().toISOString().split('T')[0],
       createdAt: Date.now()
     };
@@ -656,6 +881,9 @@ export default function App() {
     const nextTasks = [...tasks, newTask];
     setTasks(nextTasks);
     updateGlobalStore({ tasks: nextTasks });
+
+    setEmailNotificationLog(`✉️ تم إرسال إشعار بريدي للمهمة الجديدة عبر البريد الإلكتروني لأعضاء (${chanName}) فقط.`);
+    setTimeout(() => setEmailNotificationLog(''), 6000);
   };
 
   const handleCompleteTask = (taskId) => {
@@ -819,6 +1047,7 @@ export default function App() {
     : [];
 
   const currentMessages = messages.filter((m) => m.channelId === activeChannel);
+  const currentPolls = polls.filter((p) => p.channelId === activeChannel);
   const currentChannelTasks = tasks.filter((t) => (t.channelId || 'general') === activeChannel);
   const activeMembersInChannel = channelMembers[activeChannel] || [];
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
@@ -1072,7 +1301,7 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-slate-950 text-slate-100 font-sans dir-rtl select-none overflow-hidden" dir="rtl">
-      <aside className="w-64 bg-slate-900 border-l border-slate-800 flex flex-col justify-between">
+      <aside className={`fixed md:static inset-y-0 right-0 z-50 w-64 bg-slate-900 border-l border-slate-800 flex flex-col justify-between transform transition-transform duration-300 ease-in-out ${mobileSidebarOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'}`}>
         <div>
           <div className="p-4 border-b border-slate-800 flex items-center justify-between">
             <div className="flex items-center space-x-2.5 space-x-reverse">
@@ -1082,11 +1311,17 @@ export default function App() {
                 <p className="text-[11px] text-amber-300/80 font-medium mt-1">هنا نصنع الإبداع</p>
               </div>
             </div>
+            <button
+              onClick={() => setMobileSidebarOpen(false)}
+              className="md:hidden p-1 text-slate-400 hover:text-slate-100"
+            >
+              <X className="w-5 h-5" />
+            </button>
           </div>
 
           <nav className="p-3 space-y-1">
             <button
-              onClick={() => setActiveTab('chat')}
+              onClick={() => { setActiveTab('chat'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'chat' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
@@ -1096,7 +1331,7 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('calendar')}
+              onClick={() => { setActiveTab('calendar'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'calendar' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
@@ -1106,7 +1341,7 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('callsheet')}
+              onClick={() => { setActiveTab('callsheet'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'callsheet' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
@@ -1119,6 +1354,7 @@ export default function App() {
               onClick={() => {
                 setActiveTab('assets');
                 setSelectedProjectId(null);
+                setMobileSidebarOpen(false);
               }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'assets' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
@@ -1129,7 +1365,7 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => setActiveTab('team')}
+              onClick={() => { setActiveTab('team'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'team' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
@@ -1148,11 +1384,11 @@ export default function App() {
         <div className="p-3 bg-slate-950/80 border-t border-slate-800 space-y-2">
           <div className="flex items-center space-x-2 space-x-reverse p-2 bg-slate-900 rounded-lg border border-slate-800">
             <div className="w-7 h-7 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-xs">
-              {currentUser.name.charAt(0)}
+              {activeUserObj.name.charAt(0)}
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-xs font-bold text-slate-200 truncate">{currentUser.name}</p>
-              <p className="text-[10px] text-amber-400 truncate">{currentUser.role.split('|')[0]}</p>
+              <p className="text-xs font-bold text-slate-200 truncate">{activeUserObj.name}</p>
+              <p className="text-[10px] text-amber-400 truncate">{activeUserObj.role.split('|')[0]}</p>
             </div>
           </div>
 
@@ -1178,10 +1414,16 @@ export default function App() {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative">
-        <header className="h-14 bg-slate-900/60 border-b border-slate-800 px-6 flex items-center justify-between backdrop-blur-md">
+      <main className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative w-full">
+        <header className="h-14 bg-slate-900/60 border-b border-slate-800 px-4 md:px-6 flex items-center justify-between backdrop-blur-md">
           <div className="flex items-center space-x-3 space-x-reverse">
-            <h2 className="font-bold text-slate-100 text-base">
+            <button
+              onClick={() => setMobileSidebarOpen(true)}
+              className="md:hidden p-1.5 bg-slate-800 text-amber-400 rounded-lg border border-slate-700"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+            <h2 className="font-bold text-slate-100 text-sm md:text-base truncate">
               {activeTab === 'chat' && (isDirectMessage && dmPartner ? `محادثة خاصة مع ${dmPartner.name}` : 'غرف التواصل ومهام الأقسام')}
               {activeTab === 'calendar' && 'التقويم الملون وأحداث الفريق'}
               {activeTab === 'callsheet' && 'أجندة يوم التصوير والمواقع'}
@@ -1192,64 +1434,108 @@ export default function App() {
 
           <div className="flex items-center gap-2">
             {isManagementUser && (
-              <span className="text-[11px] px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-full font-mono">
+              <span className="hidden sm:inline-block text-[11px] px-2.5 py-1 bg-amber-500/10 text-amber-300 border border-amber-500/30 rounded-full font-mono">
                 رمز الدعوة: {TEAM_INVITE_CODE}
               </span>
             )}
-            <span className="text-[11px] px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1.5 font-semibold">
+            <span className="text-[10px] sm:text-[11px] px-2.5 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full flex items-center gap-1.5 font-semibold">
               <Cloud className="w-3.5 h-3.5" /> {syncStatus}
             </span>
           </div>
         </header>
 
-        <div className="flex-1 overflow-auto p-6">
+        {emailNotificationLog && (
+          <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-xs text-amber-300 flex items-center gap-2 animate-fade-in">
+            <BellRing className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>{emailNotificationLog}</span>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-auto p-3 md:p-6">
           {activeTab === 'chat' && (
-            <div className="h-full flex gap-4">
-              <div className="w-64 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-4 overflow-y-auto">
-                <div>
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 px-2">الأقسام والغرف</h3>
-                  <div className="space-y-1">
-                    {CHANNELS.map((channel) => {
-                      const isUnlocked = !channel.private || unlockedChannels.includes(channel.id);
-                      const IconComponent = channel.icon || Hash;
-                      const deptTasksCount = tasks.filter((t) => (t.channelId || 'general') === channel.id && t.status !== 'done').length;
-                      return (
-                        <button
-                          key={channel.id}
-                          onClick={() => handleSelectChannel(channel)}
-                          className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
-                            activeChannel === channel.id
-                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                              : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                          }`}
-                        >
-                          <div className="flex items-center space-x-2 space-x-reverse truncate">
-                            <IconComponent className={`w-3.5 h-3.5 flex-shrink-0 ${channel.private && !isUnlocked ? 'text-red-400' : 'text-amber-400'}`} />
-                            <span className="truncate">{channel.name}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            {deptTasksCount > 0 && isUnlocked && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">
-                                {deptTasksCount}
-                              </span>
-                            )}
-                            {channel.private && (
-                              <span className={`text-[10px] px-1.5 py-0.5 rounded ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
-                                {isUnlocked ? 'مفتوح' : 'مشفر'}
-                              </span>
-                            )}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
+            <div className="h-full flex flex-col md:flex-row gap-4">
+              <div className="w-full md:w-64 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-4 max-h-48 md:max-h-full overflow-y-auto">
+                <div className="flex items-center justify-between px-2">
+                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">الأقسام والغرف</h3>
+                  {currentUser?.id === 'fahad' && (
+                    <button
+                      onClick={() => setShowAddChannelModal(true)}
+                      className="text-[10px] bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 px-2 py-1 rounded border border-amber-500/30 font-bold flex items-center gap-1"
+                    >
+                      <ShieldPlus className="w-3 h-3" /> قسم جديد
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  {allChannels.map((channel) => {
+                    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === channel.code);
+                    const IconComponent = channel.icon || Hash;
+                    const deptTasksCount = tasks.filter((t) => (t.channelId || 'general') === channel.id && t.status !== 'done').length;
+                    const isCustomDept = channel.id.startsWith('dept_');
+                    return (
+                      <div
+                        key={channel.id}
+                        onClick={() => handleSelectChannel(channel)}
+                        className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                          activeChannel === channel.id
+                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2 space-x-reverse truncate flex-1">
+                          <IconComponent className={`w-3.5 h-3.5 flex-shrink-0 ${channel.private && !isUnlocked ? 'text-red-400' : 'text-amber-400'}`} />
+                          <span className="truncate">{channel.name}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          {deptTasksCount > 0 && isUnlocked && (
+                            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 font-bold">
+                              {deptTasksCount}
+                            </span>
+                          )}
+                          {channel.private && (
+                            <span className={`text-[10px] px-1.5 py-0.5 rounded ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
+                              {isUnlocked ? 'مفتوح' : 'مشفر'}
+                            </span>
+                          )}
+
+                          {/* خيار تغيير الرمز السري للأقسام لفهد */}
+                          {currentUser?.id === 'fahad' && channel.private && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingChannelForPasscode(channel);
+                                setNewPasscodeInput('');
+                              }}
+                              className="p-1 text-slate-400 hover:text-amber-400 rounded hover:bg-amber-500/15 transition-colors"
+                              title="تغيير الرمز السري للقسم"
+                            >
+                              <KeyRound className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+
+                          {currentUser?.id === 'fahad' && isCustomDept && (
+                            <button
+                              type="button"
+                              onClick={(e) => handleDeleteCustomChannel(channel.id, e)}
+                              className="p-1 text-slate-500 hover:text-red-400 rounded hover:bg-red-500/15 transition-colors"
+                              title="حذف القسم"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 <div className="border-t border-slate-800 pt-3">
                   <div className="flex items-center justify-between px-2 mb-2">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">المحادثات الخاصة</h3>
                     <button
-                      onClick={() => setActiveTab('team')}
+                      onClick={() => { setActiveTab('team'); setMobileSidebarOpen(false); }}
                       title="بدء محادثة جديدة من دليل الأعضاء"
                       className="text-[10px] text-amber-400 hover:underline font-bold"
                     >
@@ -1259,7 +1545,7 @@ export default function App() {
 
                   {dmPartnerList.length === 0 ? (
                     <p className="text-[11px] text-slate-500 px-2 leading-relaxed">
-                      اضغط على "محادثة خاصة" عند أي عضو في دليل الفريق لبدء محادثة فردية معه.
+                      اختر عضواً من دليل الفريق لبدء محادثة فردية.
                     </p>
                   ) : (
                     <div className="space-y-1">
@@ -1294,8 +1580,8 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl flex flex-col overflow-hidden relative">
-                <div className="px-5 py-3 border-b border-slate-800 bg-slate-950/40 flex flex-col gap-2">
+              <div className="flex-1 bg-slate-900 border border-slate-800 rounded-xl flex flex-col overflow-hidden relative min-h-[450px]">
+                <div className="px-4 md:px-5 py-3 border-b border-slate-800 bg-slate-950/40 flex flex-col gap-2">
                   <div className="flex flex-wrap justify-between items-center gap-2">
                     {isDirectMessage && dmPartner ? (
                       <div className="flex items-center gap-2.5">
@@ -1318,7 +1604,7 @@ export default function App() {
                         <div className="flex items-center space-x-2 space-x-reverse">
                           <Hash className="w-4 h-4 text-amber-400" />
                           <span className="text-sm font-bold text-slate-200">
-                            {CHANNELS.find((c) => c.id === activeChannel)?.name}
+                            {allChannels.find((c) => c.id === activeChannel)?.name}
                           </span>
                         </div>
 
@@ -1387,17 +1673,85 @@ export default function App() {
 
                 {(isDirectMessage || channelSubTab === 'chat') ? (
                   <>
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                      {currentMessages.length === 0 ? (
+                    <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                      {currentPolls.map((poll) => {
+                        const totalVotes = poll.options.reduce((sum, opt) => sum + opt.votes.length, 0);
+                        const canDeletePoll = poll.createdBy === activeUserObj.name.split(' ')[0] || isManagementUser;
+                        return (
+                          <div key={poll.id} className="bg-slate-950 border border-amber-500/30 p-4 rounded-xl space-y-3 shadow-lg">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="p-1.5 bg-amber-500/20 text-amber-400 rounded-lg">
+                                  <BarChart2 className="w-4 h-4" />
+                                </span>
+                                <div>
+                                  <span className="text-[10px] text-amber-400 font-bold">تصويت نشط • بواسطة {poll.createdBy}</span>
+                                  <h4 className="text-xs font-bold text-slate-100">{poll.question}</h4>
+                                </div>
+                              </div>
+                              {canDeletePoll && (
+                                <button
+                                  onClick={() => handleDeletePoll(poll.id)}
+                                  className="p-1 hover:bg-red-500/20 text-red-400 rounded transition-colors"
+                                  title="حذف التصويت"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              )}
+                            </div>
+
+                            <div className="space-y-2 pt-1">
+                              {poll.options.map((option, idx) => {
+                                const optionVotes = option.votes.length;
+                                const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
+                                const hasVotedThis = option.votes.includes(currentUser.id);
+
+                                return (
+                                  <button
+                                    key={idx}
+                                    onClick={() => handleVotePoll(poll.id, idx)}
+                                    className={`w-full text-right relative overflow-hidden p-2.5 rounded-lg border transition-all ${
+                                      hasVotedThis
+                                        ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-bold'
+                                        : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800/80'
+                                    }`}
+                                  >
+                                    <div
+                                      className="absolute inset-y-0 right-0 bg-amber-500/10 transition-all duration-300"
+                                      style={{ width: `${percentage}%` }}
+                                    ></div>
+                                    <div className="relative flex justify-between items-center text-xs">
+                                      <div className="flex items-center gap-2">
+                                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] ${hasVotedThis ? 'bg-amber-500 border-amber-500 text-slate-950 font-black' : 'border-slate-600'}`}>
+                                          {hasVotedThis && '✓'}
+                                        </span>
+                                        <span>{option.text}</span>
+                                      </div>
+                                      <span className="text-[11px] font-mono text-amber-400">
+                                        {optionVotes} صوت ({percentage}%)
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            <div className="text-[10px] text-slate-500 text-left">
+                              إجمالي الأصوات: {totalVotes}
+                            </div>
+                          </div>
+                        );
+                      })}
+
+                      {currentMessages.length === 0 && currentPolls.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-slate-500 text-sm text-center px-4">
                           {isDirectMessage && dmPartner
-                            ? `هذه بداية محادثتك الخاصة والمباشرة مع ${dmPartner.name}. اكتب رسالتك بالأسفل!`
-                            : 'لا يوجد رسائل بعد في غرفة هذا القسم. اكتب رسالة لترسلها لأعضاء الفريق مباشرة!'}
+                            ? `هذه بداية محادثتك الخاصة والمباشرة مع ${dmPartner.name}. اكتب رسالتك أو أنشئ تصويتاً!`
+                            : 'لا يوجد رسائل أو تصويتات بعد في هذه الغرفة. ابدأ بإرسال رسالة أو إنشاء تصويت!'}
                         </div>
                       ) : (
                         currentMessages.map((msg) => {
                           const isMine = msg.senderId === currentUser.id;
-                          const canDeleteMessage = isMine || msg.sender === currentUser.name || (!isDirectMessage && isManagementUser);
+                          const canDeleteMessage = isMine || msg.sender === activeUserObj.name || (!isDirectMessage && isManagementUser);
                           return (
                             <div
                               key={msg.id}
@@ -1427,33 +1781,88 @@ export default function App() {
                                   )}
                                 </div>
                               </div>
-                              <p className="text-xs text-slate-200 leading-relaxed select-text">{msg.text}</p>
+
+                              {msg.text && <p className="text-xs text-slate-200 leading-relaxed select-text">{msg.text}</p>}
+
+                              {msg.image && (
+                                <div className="mt-2">
+                                  <img
+                                    src={msg.image}
+                                    alt="مرفق صورة"
+                                    className="max-h-60 rounded-lg object-cover border border-slate-700 cursor-pointer"
+                                    onClick={() => window.open(msg.image, '_blank')}
+                                  />
+                                </div>
+                              )}
                             </div>
                           );
                         })
                       )}
                     </div>
 
-                    <form onSubmit={handleSendMessage} className="p-3 border-t border-slate-800 bg-slate-950/60 flex items-center gap-2">
-                      <input
-                        type="text"
-                        value={inputMessage}
-                        onChange={(e) => setInputMessage(e.target.value)}
-                        placeholder={
-                          isDirectMessage && dmPartner
-                            ? `اكتب رسالة خاصة إلى ${dmPartner.name}...`
-                            : `أرسل رسالة فورية إلى ${CHANNELS.find((c) => c.id === activeChannel)?.name}...`
-                        }
-                        className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500"
-                      />
-                      <button
-                        type="submit"
-                        className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors"
-                      >
-                        <Send className="w-3.5 h-3.5" />
-                        <span>إرسال</span>
-                      </button>
-                    </form>
+                    {/* صندوق كتابة الرسائل والإضافات */}
+                    {allChannels.find((c) => c.id === activeChannel)?.isNews && !isManagementUser ? (
+                      <div className="p-3 border-t border-slate-800 bg-slate-950/80 text-center text-xs text-amber-400">
+                        📢 هذا القسم للقراءة فقط (مخصص لنشر أخبار وتعاميم الفريق من الإدارة).
+                      </div>
+                    ) : (
+                      <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex flex-col gap-2">
+                        {imageAttachment && (
+                          <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-800 w-fit">
+                            <ImageIcon className="w-4 h-4 text-amber-400" />
+                            <span className="text-xs text-slate-300">تم إرفاق صورة جاهزة للإرسال</span>
+                            <button
+                              onClick={() => setImageAttachment(null)}
+                              className="text-red-400 hover:text-red-300 p-1"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowAddPollModal(true)}
+                            className="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 font-bold px-3 py-2.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors flex-shrink-0"
+                            title="إنشاء تصويت جديد"
+                          >
+                            <BarChart2 className="w-4 h-4" />
+                            <span className="hidden sm:inline">تصويت</span>
+                          </button>
+
+                          <label
+                            className="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 font-bold px-3 py-2.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer flex-shrink-0"
+                            title="إرفاق صورة"
+                          >
+                            <ImageIcon className="w-4 h-4" />
+                            <span className="hidden sm:inline">صورة</span>
+                            <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                          </label>
+
+                          <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={inputMessage}
+                              onChange={(e) => setInputMessage(e.target.value)}
+                              placeholder={
+                                isDirectMessage && dmPartner
+                                  ? `اكتب رسالة خاصة إلى ${dmPartner.name}...`
+                                  : `أرسل رسالة فورية إلى ${allChannels.find((c) => c.id === activeChannel)?.name}...`
+                              }
+                              className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                            />
+                            <button
+                              type="submit"
+                              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors"
+                            >
+                              <Send className="w-3.5 h-3.5" />
+                              <span>إرسال</span>
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -1463,7 +1872,7 @@ export default function App() {
                           type="text"
                           value={newDeptTaskTitle}
                           onChange={(e) => setNewDeptTaskTitle(e.target.value)}
-                          placeholder={`أضف مهمة جديدة لـ ${CHANNELS.find((c) => c.id === activeChannel)?.name}...`}
+                          placeholder={`أضف مهمة جديدة لـ ${allChannels.find((c) => c.id === activeChannel)?.name}...`}
                           className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500"
                         />
                         <button
@@ -1582,7 +1991,7 @@ export default function App() {
                       <div>
                         <h3 className="font-bold text-slate-100 text-base">غرفة قسم مشفرة</h3>
                         <p className="text-xs text-slate-400 mt-1">
-                          أدخل رمز الحماية (Passcode) الخاص بـ <span className="text-amber-400 font-bold">{passcodeModalChannel.name}</span> للدخول (يُحفظ تلقائياً بعد أول مرة):
+                          أدخل رمز الحماية (Passcode) الخاص بـ <span className="text-amber-400 font-bold">{passcodeModalChannel.name}</span> للدخول:
                         </p>
                       </div>
 
@@ -1624,7 +2033,7 @@ export default function App() {
           )}
 
           {activeTab === 'calendar' && (
-            <div className="space-y-6 max-w-4xl">
+            <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                 <div>
                   <h3 className="text-sm font-bold text-amber-400">تقويم أحداث ومواعيد الفريق</h3>
@@ -1640,7 +2049,7 @@ export default function App() {
 
               {showAddEventModal && (
                 <form onSubmit={handleAddCalendarEvent} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-amber-400">إضافة فعالية جديدة للتقويم</h4>
+                  <h4 className="text-xs font-bold text-amber-400">إضافة فعالية جديدة للتقويم وإرسال إشعار بريدي للفريق</h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                     <div>
                       <label className="block text-slate-400 mb-1">عنوان الحدث:</label>
@@ -1682,7 +2091,7 @@ export default function App() {
                     type="submit"
                     className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
                   >
-                    حفظ ونشر الموعد في التقويم
+                    حفظ الموعد في التقويم وإرسال الإشعار
                   </button>
                 </form>
               )}
@@ -1735,7 +2144,7 @@ export default function App() {
           )}
 
           {activeTab === 'callsheet' && (
-            <div className="space-y-6 max-w-4xl">
+            <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex justify-between items-center">
                 <h3 className="text-sm font-bold text-slate-200">أجندة أيام التصوير الحالية</h3>
                 <button
@@ -1883,7 +2292,7 @@ export default function App() {
           )}
 
           {activeTab === 'assets' && (
-            <div className="space-y-6 max-w-5xl">
+            <div className="space-y-6 max-w-5xl mx-auto">
               {!selectedProject ? (
                 <>
                   <div className="flex justify-between items-center">
@@ -2173,6 +2582,19 @@ export default function App() {
                         </button>
                       )}
 
+                      {currentUser?.id === 'fahad' && (
+                        <button
+                          onClick={() => {
+                            setEditingRoleMember(member);
+                            setNewRoleInput(member.role);
+                          }}
+                          className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs font-bold border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>تعديل الرتبة / القسم</span>
+                        </button>
+                      )}
+
                       {isManagementUser && (
                         <div className="flex gap-1.5 pt-1">
                           {hasCustomPass && (
@@ -2203,6 +2625,253 @@ export default function App() {
             </div>
           )}
         </div>
+
+        {/* Modal: تعديل رتبة العضو (خاص بفهد) */}
+        {editingRoleMember && (
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
+                  <Shield className="w-4 h-4" /> تعديل رتبة {editingRoleMember.name}
+                </h3>
+                <button onClick={() => setEditingRoleMember(null)} className="text-slate-400 hover:text-slate-200">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveMemberRole} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-300 mb-1">المسمى الوظيفي أو الرتبة:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newRoleInput}
+                    onChange={(e) => setNewRoleInput(e.target.value)}
+                    placeholder="مثال: Management Team | Head of Art"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    أضف <code className="text-amber-400">Management Team</code> لمنح العضو صلاحيات الإدارة الكاملة.
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingRoleMember(null)}
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    حفظ الرتبة
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Modal: تغيير الرمز السري للقسم (خاص بفهد) */}
+        {editingChannelForPasscode && (
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
+                  <KeyRound className="w-4 h-4" /> تغيير رمز قسم {editingChannelForPasscode.name}
+                </h3>
+                <button onClick={() => setEditingChannelForPasscode(null)} className="text-slate-400 hover:text-slate-200">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleUpdateChannelPasscode} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-300 mb-1">الرمز السري الجديد:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newPasscodeInput}
+                    onChange={(e) => setNewPasscodeInput(e.target.value)}
+                    placeholder="مثال: 8888"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 font-mono text-center text-base"
+                  />
+                  <p className="text-[10px] text-amber-400/90 mt-1.5 leading-relaxed">
+                    ⚠️ تنبيه: بمجرد الحفظ، سيتطلب من الجميع (بمن فيهم الموجودون حالياً) إدخال الرمز الجديد للدخول مجدداً.
+                  </p>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setEditingChannelForPasscode(null)}
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    تحديث الرمز وإغلاق القسم
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showAddPollModal && (
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
+                  <BarChart2 className="w-4 h-4" /> إنشاء تصويت جديد في القسم
+                </h3>
+                <button
+                  onClick={() => setShowAddPollModal(false)}
+                  className="text-slate-400 hover:text-slate-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreatePoll} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-300 mb-1">سؤال أو موضوع التصويت:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newPollQuestion}
+                    onChange={(e) => setNewPollQuestion(e.target.value)}
+                    placeholder="مثال: أي وقت يناسبكم لبروفة المشهد القادم؟"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="block text-slate-300">خيارات التصويت:</label>
+                  {newPollOptions.map((opt, index) => (
+                    <div key={index} className="flex gap-2">
+                      <input
+                        type="text"
+                        required={index < 2}
+                        value={opt}
+                        onChange={(e) => {
+                          const updated = [...newPollOptions];
+                          updated[index] = e.target.value;
+                          setNewPollOptions(updated);
+                        }}
+                        placeholder={`الخيار ${index + 1}`}
+                        className="flex-1 bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
+                      />
+                      {newPollOptions.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = newPollOptions.filter((_, i) => i !== index);
+                            setNewPollOptions(updated);
+                          }}
+                          className="px-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))}
+
+                  {newPollOptions.length < 5 && (
+                    <button
+                      type="button"
+                      onClick={() => setNewPollOptions([...newPollOptions, ''])}
+                      className="text-amber-400 hover:underline font-bold text-[11px] pt-1"
+                    >
+                      + إضافة خيار آخر
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex gap-2 pt-3 border-t border-slate-800">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddPollModal(false)}
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    نشر التصويت الآن
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {showAddChannelModal && (
+          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
+              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
+                  <ShieldPlus className="w-4 h-4" /> إنشاء قسم أو غرفة جديدة
+                </h3>
+                <button
+                  onClick={() => setShowAddChannelModal(false)}
+                  className="text-slate-400 hover:text-slate-200"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <form onSubmit={handleCreateCustomChannel} className="space-y-3 text-xs">
+                <div>
+                  <label className="block text-slate-300 mb-1">اسم القسم الجديد:</label>
+                  <input
+                    type="text"
+                    required
+                    value={newChanName}
+                    onChange={(e) => setNewChanName(e.target.value)}
+                    placeholder="مثال: قسم الديكور الخاص..."
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-slate-300 mb-1">رمز الدخول السري (Passcode):</label>
+                  <input
+                    type="text"
+                    required
+                    value={newChanCode}
+                    onChange={(e) => setNewChanCode(e.target.value)}
+                    placeholder="مثال: 7070"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 font-mono"
+                  />
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddChannelModal(false)}
+                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    إلغاء
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
+                  >
+                    إنشاء القسم فوراً
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {showChangePasswordModal && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
