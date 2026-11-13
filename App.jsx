@@ -1,19 +1,4 @@
 import React, { useState } from 'react';
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-
-// --- (1) إعدادات Firebase ---
-const firebaseConfig = {
-  apiKey: "AIzaSyYourApiKeyHere",
-  authDomain: "team-cue.firebaseapp.com",
-  projectId: "team-cue",
-  storageBucket: "team-cue.appspot.com",
-  messagingSenderId: "123456789",
-  appId: "1:123456789:web:abcdef"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
 
 export default function TeamCueApp() {
   const [currentView, setCurrentView] = useState('activeProjects'); // 'activeProjects' | 'archive' | 'productionDirs' | 'calendar' | 'managementBudget'
@@ -75,7 +60,6 @@ export default function TeamCueApp() {
 
   // --- دوال التحكم والإضافة والتعديل والحذف ---
 
-  // 1. إضافة ممثل للقائمة العامة
   const handleAddActor = (e) => {
     e.preventDefault();
     if (!newActorName) return;
@@ -94,7 +78,6 @@ export default function TeamCueApp() {
     setNewActorNotes('');
   };
 
-  // حذف ممثل من القائمة العامة
   const handleDeleteActor = (id) => {
     setProductionDirectories({
       ...productionDirectories,
@@ -102,7 +85,6 @@ export default function TeamCueApp() {
     });
   };
 
-  // 2. إضافة لقطة جديدة داخل مجلد العمل (Shot List)
   const handleAddShot = (e) => {
     e.preventDefault();
     if (!newShotScene) return;
@@ -128,7 +110,6 @@ export default function TeamCueApp() {
     setProjects(projects.map(p => p.id === updatedProj.id ? updatedProj : p));
   };
 
-  // 3. إضافة كول شيت داخل العمل
   const handleAddCallSheet = (e) => {
     e.preventDefault();
     if (!newCsLoc) return;
@@ -153,7 +134,6 @@ export default function TeamCueApp() {
     setProjects(projects.map(p => p.id === updatedProj.id ? updatedProj : p));
   };
 
-  // 4. إضافة فاتورة داخل العمل
   const handleAddInvoice = (e) => {
     e.preventDefault();
     if (!newInvDesc || !newInvAmount) return;
@@ -267,7 +247,6 @@ export default function TeamCueApp() {
 
             <div className="bg-gray-950 p-6 rounded-xl border border-gray-800 min-h-[350px]">
               
-              {/* تبويب السيناريو */}
               {activeTabInProject === 'script' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-amber-400">سيناريو العمل</h3>
@@ -278,7 +257,6 @@ export default function TeamCueApp() {
                 </div>
               )}
 
-              {/* تبويب الستوري بورد */}
               {activeTabInProject === 'storyboard' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-amber-400">لوحة القصة (Storyboard)</h3>
@@ -292,7 +270,6 @@ export default function TeamCueApp() {
                 </div>
               )}
 
-              {/* تبويب الشوت ليست (مع الإضافة والحذف) */}
               {activeTabInProject === 'shotList' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-amber-400">قائمة اللقطات (Shot List)</h3>
@@ -329,7 +306,6 @@ export default function TeamCueApp() {
                 </div>
               )}
 
-              {/* تبويب الكول شيت (مع الإضافة والحذف) */}
               {activeTabInProject === 'callSheet' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-amber-400">جدول الحضور اليومي (Call Sheet)</h3>
@@ -353,7 +329,6 @@ export default function TeamCueApp() {
                 </div>
               )}
 
-              {/* تبويب الممثلين وطاقم العمل */}
               {activeTabInProject === 'castCrew' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-amber-400">طاقم وممثلو العمل</h3>
@@ -367,7 +342,6 @@ export default function TeamCueApp() {
                 </div>
               )}
 
-              {/* تبويب الميزانية */}
               {activeTabInProject === 'budget' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-amber-400">ميزانية أقسام العمل</h3>
@@ -388,7 +362,6 @@ export default function TeamCueApp() {
                 </div>
               )}
 
-              {/* تبويب قسم الديكور والفن */}
               {activeTabInProject === 'artDept' && (
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-amber-400">قسم الديكور والفن (Art Department)</h3>
@@ -405,7 +378,6 @@ export default function TeamCueApp() {
                 </div>
               )}
 
-              {/* تبويب الفواتير (مع الإضافة والمسح) */}
               {activeTabInProject === 'invoices' && (
                 <div>
                   <h3 className="text-lg font-semibold mb-3 text-amber-400">فواتير ومصاريف العمل</h3>
@@ -444,7 +416,6 @@ export default function TeamCueApp() {
           </div>
         ) : (
 
-          /* الشاشات الرئيسية الأخرى */
           <>
             {currentView === 'activeProjects' && (
               <div>
@@ -477,12 +448,10 @@ export default function TeamCueApp() {
               </div>
             )}
 
-            {/* قوائم الإنتاج العامة (مع إضافة وحذف الممثلين) */}
             {currentView === 'productionDirs' && (
               <div>
                 <h2 className="text-xl font-bold text-white mb-6">قوائم إدارة الإنتاج العامة</h2>
                 
-                {/* قسم الممثليين مع نموذج الإضافة والحذف */}
                 <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 mb-6">
                   <h3 className="font-semibold text-amber-400 mb-4">قائمة الممثلين العامة (إضافة وتعديل وحذف)</h3>
                   <form onSubmit={handleAddActor} className="flex gap-2 mb-4">
@@ -525,7 +494,7 @@ export default function TeamCueApp() {
             {currentView === 'managementBudget' && (
               <div className="bg-gray-900 p-6 rounded-xl border border-red-900/50">
                 <h2 className="text-xl font-bold text-white mb-2 text-red-500">ميزانية ومصروفات الإدارة العامة (خاص)</h2>
-                <p className="text-xs text-gray-400 mb-6">هذا القسم مرئي حصرياً للإدارة العليا لفهد الفريق.</p>
+                <p className="text-xs text-gray-400 mb-6">هذا القسم مرئي حصرياً للإدارة العليا.</p>
                 <div className="grid grid-cols-3 gap-6">
                   <div className="bg-gray-950 p-4 rounded-lg border border-gray-800">
                     <p className="text-xs text-gray-400">الميزانية الكلية</p>
