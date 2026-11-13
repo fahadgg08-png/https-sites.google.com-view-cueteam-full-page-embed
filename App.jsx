@@ -43,7 +43,12 @@ import {
   BarChart2,
   Image as ImageIcon,
   Shield,
-  Edit3
+  Edit3,
+  Camera,
+  DollarSign,
+  Box,
+  CheckCircle2,
+  Navigation
 } from 'lucide-react';
 
 const TEAM_LOGO_URL = teamLogo;
@@ -96,8 +101,8 @@ const INITIAL_CHANNELS = [
 ];
 
 const INITIAL_TASKS = [
-  { id: '1', channelId: 'production', title: 'تأكيد تصاريح التصوير في الدرعية', status: 'done', priority: 'high', assignee: 'فهد', date: '2026-11-05', fileName: '', fileUrl: '' },
-  { id: '2', channelId: 'directing', title: 'معاينة زوايا إضاءة المشهد 4 (Studio B)', status: 'in-progress', priority: 'high', assignee: 'عبدالعزيز', date: '2026-11-10', fileName: '', fileUrl: '' }
+  { id: '1', channelId: 'production', title: 'تأكيد تصاريح التصوير في الدرعية', status: 'todo', priority: 'high', assignee: 'فهد', dueDate: '2026-11-20', date: '2026-11-05' },
+  { id: '2', channelId: 'directing', title: 'معاينة زوايا إضاءة المشهد 4 (Studio B)', status: 'in-progress', priority: 'high', assignee: 'عبدالعزيز', dueDate: '2026-11-18', date: '2026-11-10' }
 ];
 
 const INITIAL_CALL_SHEETS = [
@@ -106,10 +111,13 @@ const INITIAL_CALL_SHEETS = [
     day: 'اليوم الأول',
     date: '2026-11-12',
     location: 'حي الطريف - الدرعية التاريخية، الرياض',
+    mapLink: 'https://maps.google.com/?q=Diriyah',
+    parkingNotes: 'مواقف طاقم الإنتاج بجوار البوابة الرئيسية رقم 3',
     callTime: '06:30 صباحاً',
     weather: 'مشمس 28°C',
     scenes: 'المشهد 1 (خارجي/نهار)، المشهد 2 (غروب)',
-    importantNotes: 'الرجاء الحضور قبل 30 دقيقة من الوقت المحدد للمكياج والتجهيز.'
+    importantNotes: 'الرجاء الحضور قبل 30 دقيقة من الوقت المحدد للمكياج والتجهيز.',
+    checkedInMembers: []
   }
 ];
 
@@ -118,6 +126,8 @@ const INITIAL_PROJECTS = [
     id: 'proj_1',
     title: 'المعزوفة - فيلم قصير',
     description: 'ملفات السيناريو، الستوري بورد، ومقاطع التصوير الخاصة بالعمل',
+    status: 'قيد التصوير والمونتاج',
+    budgetTotal: '15,000 ريال',
     createdBy: 'فهد',
     date: '2026-11-12'
   }
@@ -204,7 +214,53 @@ export default function App() {
   const [newPollQuestion, setNewPollQuestion] = useState('');
   const [newPollOptions, setNewPollOptions] = useState(['', '']);
 
+  // New features states
+  const [shotLists, setShotLists] = useState([
+    { id: 'sl_1', scene: 'المشهد 1', shotNum: '1', shotSize: 'Wide Shot (WS)', movement: 'Panning', lens: '35mm', description: 'لقطة تأسيسية لموقع التصوير عند الشروق', assignedTo: 'عبدالعزيز / طارق' }
+  ]);
+  const [showAddShotList, setShowAddShotList] = useState(false);
+  const [newSlScene, setNewSlScene] = useState('');
+  const [newSlNum, setNewSlNum] = useState('');
+  const [newSlSize, setNewSlSize] = useState('Medium Shot (MS)');
+  const [newSlMovement, setNewSlMovement] = useState('');
+  const [newSlLens, setNewSlLens] = useState('');
+  const [newSlDesc, setNewSlDesc] = useState('');
+  const [newSlAssign, setNewSlAssign] = useState('');
+
+  const [castList, setCastList] = useState([
+    { id: 'cast_1', characterName: 'سلطان', actorName: 'محمد العتيبي', phone: '0500000000', costumeNotes: 'بدلة رسمية كلاسيكية', rehearsalTime: 'الخميس 4 عصراً' }
+  ]);
+  const [showAddCast, setShowAddCast] = useState(false);
+  const [newCastChar, setNewCastChar] = useState('');
+  const [newCastActor, setNewCastActor] = useState('');
+  const [newCastPhone, setNewCastPhone] = useState('');
+  const [newCastCostume, setNewCastCostume] = useState('');
+  const [newCastRehearsal, setNewCastRehearsal] = useState('');
+
+  const [propsInventory, setPropsInventory] = useState([
+    { id: 'prop_1', name: 'كرسي خشبي عتيق (طراز 1980)', category: 'أثاث', status: 'متاح', location: 'المستودع أ', assignedTo: 'فهد' }
+  ]);
+  const [showAddProp, setShowAddProp] = useState(false);
+  const [newPropName, setNewPropName] = useState('');
+  const [newPropCat, setNewPropCat] = useState('أثاث');
+  const [newPropStatus, setNewPropStatus] = useState('متاح');
+  const [newPropLoc, setNewPropLoc] = useState('');
+  const [newPropAssign, setNewPropAssign] = useState('');
+
+  const [budgetItems, setBudgetItems] = useState([
+    { id: 'b_1', title: 'إيجار معدات الإضاءة والكاميرات', category: 'إنتاج', amount: '4500', type: 'مصروف', date: '2026-11-10' },
+    { id: 'b_2', title: 'ديكورات وتجهيزات المشهد الداخلي', category: 'فنون وديكور', amount: '2000', type: 'مصروف', date: '2026-11-11' }
+  ]);
+  const [showAddBudget, setShowAddBudget] = useState(false);
+  const [newBTitle, setNewBTitle] = useState('');
+  const [newBCat, setNewBCat] = useState('إنتاج');
+  const [newBAmount, setNewBAmount] = useState('');
+  const [newBType, setNewBType] = useState('مصروف');
+
   const [newDeptTaskTitle, setNewDeptTaskTitle] = useState('');
+  const [newDeptTaskAssignee, setNewDeptTaskAssignee] = useState('');
+  const [newDeptTaskPriority, setNewDeptTaskPriority] = useState('medium');
+  const [newDeptTaskDueDate, setNewDeptTaskDueDate] = useState('');
   const [newDeptTaskFileName, setNewDeptTaskFileName] = useState('');
   const [newDeptTaskFileUrl, setNewDeptTaskFileUrl] = useState('');
   const [showDeptTaskFileInputs, setShowDeptTaskFileInputs] = useState(false);
@@ -214,6 +270,8 @@ export default function App() {
   const [newCsDay, setNewCsDay] = useState('');
   const [newCsDate, setNewCsDate] = useState('');
   const [newCsLocation, setNewCsLocation] = useState('');
+  const [newCsMapLink, setNewCsMapLink] = useState('');
+  const [newCsParking, setNewCsParking] = useState('');
   const [newCsCallTime, setNewCsCallTime] = useState('');
   const [newCsScenes, setNewCsScenes] = useState('');
   const [newCsNotes, setNewCsNotes] = useState('');
@@ -235,11 +293,12 @@ export default function App() {
   const [showAddProject, setShowAddProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
+  const [newProjectStatus, setNewProjectStatus] = useState('قيد التحضير');
+  const [newProjectBudget, setNewProjectBudget] = useState('');
 
   const [newAssetTitle, setNewAssetTitle] = useState('');
   const [newAssetCategory, setNewAssetCategory] = useState('script');
   const [newAssetUrl, setNewAssetUrl] = useState('');
-  const [newAssetSize, setNewAssetSize] = useState('2.5 MB');
   const [showAddAsset, setShowAddAsset] = useState(false);
 
   const [callSheets, setCallSheets] = useState(INITIAL_CALL_SHEETS);
@@ -302,6 +361,10 @@ export default function App() {
           if (data.customChannels !== undefined) setCustomChannels(data.customChannels);
           if (data.channelPasscodes !== undefined) setChannelPasscodes(data.channelPasscodes);
           if (data.polls !== undefined) setPolls(data.polls);
+          if (data.shotLists !== undefined) setShotLists(data.shotLists);
+          if (data.castList !== undefined) setCastList(data.castList);
+          if (data.propsInventory !== undefined) setPropsInventory(data.propsInventory);
+          if (data.budgetItems !== undefined) setBudgetItems(data.budgetItems);
         } else {
           setDoc(workspaceDocRef, {
             messages: [],
@@ -318,6 +381,10 @@ export default function App() {
             customChannels: [],
             channelPasscodes: {},
             polls: [],
+            shotLists: [],
+            castList: [],
+            propsInventory: [],
+            budgetItems: [],
             lastUpdated: Date.now()
           });
         }
@@ -396,6 +463,10 @@ export default function App() {
       customChannels: newPartialState.customChannels !== undefined ? newPartialState.customChannels : customChannels,
       channelPasscodes: newPartialState.channelPasscodes !== undefined ? newPartialState.channelPasscodes : channelPasscodes,
       polls: newPartialState.polls !== undefined ? newPartialState.polls : polls,
+      shotLists: newPartialState.shotLists !== undefined ? newPartialState.shotLists : shotLists,
+      castList: newPartialState.castList !== undefined ? newPartialState.castList : castList,
+      propsInventory: newPartialState.propsInventory !== undefined ? newPartialState.propsInventory : propsInventory,
+      budgetItems: newPartialState.budgetItems !== undefined ? newPartialState.budgetItems : budgetItems,
       lastUpdated: Date.now()
     };
     try {
@@ -408,7 +479,7 @@ export default function App() {
   const activeUserObj = allTeamMembers.find((m) => m.id === currentUser?.id) || currentUser;
   const isManagementUser = activeUserObj?.role?.includes('Management Team') || activeUserObj?.id === 'fahad';
 
-  const handleRemoveMemberFromChannel = async (memberId, memberName) => {
+  const handleRemoveMemberFromChannel = async (memberId) => {
     if (!isManagementUser || activeChannel.startsWith('dm_')) return;
     const currentList = channelMembers[activeChannel] || [];
     const updatedList = currentList.filter((m) => m.id !== memberId);
@@ -465,7 +536,7 @@ export default function App() {
     setNewPasscodeInput('');
 
     await updateGlobalStore({ channelPasscodes: nextPasscodes });
-    alert(`تم تحديث الرمز السري لـ (${editingChannelForPasscode.name}) بنجاح. تم إغلاق القسم على المتواجدين لإدخال الرمز الجديد.`);
+    alert(`تم تحديث الرمز السري لـ (${editingChannelForPasscode.name}) بنجاح.`);
   };
 
   const handleSaveMemberRole = async (e) => {
@@ -489,10 +560,6 @@ export default function App() {
     delete nextUnlocked[channelId];
     setUnlockedChannels(nextUnlocked);
 
-    const nextTasks = tasks.filter((t) => t.channelId !== channelId);
-    const nextMessages = messages.filter((m) => m.channelId !== channelId);
-    const nextPolls = polls.filter((p) => p.channelId !== channelId);
-
     let nextActiveChannel = activeChannel;
     if (activeChannel === channelId) {
       nextActiveChannel = 'general';
@@ -500,16 +567,131 @@ export default function App() {
 
     setCustomChannels(nextCustomChannels);
     setActiveChannel(nextActiveChannel);
-    setTasks(nextTasks);
-    setMessages(nextMessages);
-    setPolls(nextPolls);
 
-    await updateGlobalStore({
-      customChannels: nextCustomChannels,
-      tasks: nextTasks,
-      messages: nextMessages,
-      polls: nextPolls
+    await updateGlobalStore({ customChannels: nextCustomChannels });
+  };
+
+  // Handlers for New Features
+  const handleAddShotList = (e) => {
+    e.preventDefault();
+    if (!newSlScene.trim() || !newSlNum.trim()) return;
+    const item = {
+      id: 'sl_' + Date.now(),
+      scene: newSlScene.trim(),
+      shotNum: newSlNum.trim(),
+      shotSize: newSlSize,
+      movement: newSlMovement.trim() || 'ثابت',
+      lens: newSlLens.trim() || '50mm',
+      description: newSlDesc.trim(),
+      assignedTo: newSlAssign.trim() || activeUserObj.name.split(' ')[0]
+    };
+    const next = [item, ...shotLists];
+    setShotLists(next);
+    updateGlobalStore({ shotLists: next });
+    setNewSlScene('');
+    setNewSlNum('');
+    setNewSlDesc('');
+    setNewSlAssign('');
+    setShowAddShotList(false);
+  };
+
+  const handleDeleteShotList = (id) => {
+    const next = shotLists.filter(s => s.id !== id);
+    setShotLists(next);
+    updateGlobalStore({ shotLists: next });
+  };
+
+  const handleAddCast = (e) => {
+    e.preventDefault();
+    if (!newCastChar.trim() || !newCastActor.trim()) return;
+    const item = {
+      id: 'cast_' + Date.now(),
+      characterName: newCastChar.trim(),
+      actorName: newCastActor.trim(),
+      phone: newCastPhone.trim() || 'غير متوفر',
+      costumeNotes: newCastCostume.trim() || 'قيد التجهيز',
+      rehearsalTime: newCastRehearsal.trim() || 'يُحدد لاحقاً'
+    };
+    const next = [item, ...castList];
+    setCastList(next);
+    updateGlobalStore({ castList: next });
+    setNewCastChar('');
+    setNewCastActor('');
+    setNewCastPhone('');
+    setNewCastCostume('');
+    setNewCastRehearsal('');
+    setShowAddCast(false);
+  };
+
+  const handleDeleteCast = (id) => {
+    const next = castList.filter(c => c.id !== id);
+    setCastList(next);
+    updateGlobalStore({ castList: next });
+  };
+
+  const handleAddProp = (e) => {
+    e.preventDefault();
+    if (!newPropName.trim()) return;
+    const item = {
+      id: 'prop_' + Date.now(),
+      name: newPropName.trim(),
+      category: newPropCat,
+      status: newPropStatus,
+      location: newPropLoc.trim() || 'المستودع الرئيسي',
+      assignedTo: newPropAssign.trim() || activeUserObj.name.split(' ')[0]
+    };
+    const next = [item, ...propsInventory];
+    setPropsInventory(next);
+    updateGlobalStore({ propsInventory: next });
+    setNewPropName('');
+    setNewPropLoc('');
+    setNewPropAssign('');
+    setShowAddProp(false);
+  };
+
+  const handleDeleteProp = (id) => {
+    const next = propsInventory.filter(p => p.id !== id);
+    setPropsInventory(next);
+    updateGlobalStore({ propsInventory: next });
+  };
+
+  const handleAddBudget = (e) => {
+    e.preventDefault();
+    if (!newBTitle.trim() || !newBAmount.trim()) return;
+    const item = {
+      id: 'b_' + Date.now(),
+      title: newBTitle.trim(),
+      category: newBCat,
+      amount: newBAmount.trim(),
+      type: newBType,
+      date: new Date().toISOString().split('T')[0]
+    };
+    const next = [item, ...budgetItems];
+    setBudgetItems(next);
+    updateGlobalStore({ budgetItems: next });
+    setNewBTitle('');
+    setNewBAmount('');
+    setShowAddBudget(false);
+  };
+
+  const handleDeleteBudget = (id) => {
+    const next = budgetItems.filter(b => b.id !== id);
+    setBudgetItems(next);
+    updateGlobalStore({ budgetItems: next });
+  };
+
+  const handleCheckInCallSheet = (csId) => {
+    const next = callSheets.map(cs => {
+      if (cs.id !== csId) return cs;
+      const checked = cs.checkedInMembers || [];
+      if (checked.includes(currentUser.id)) {
+        return { ...cs, checkedInMembers: checked.filter(id => id !== currentUser.id) };
+      } else {
+        return { ...cs, checkedInMembers: [...checked, currentUser.id] };
+      }
     });
+    setCallSheets(next);
+    updateGlobalStore({ callSheets: next });
   };
 
   const handleCreatePoll = (e) => {
@@ -538,7 +720,7 @@ export default function App() {
     setNewPollOptions(['', '']);
     setShowAddPollModal(false);
 
-    setEmailNotificationLog(`📊 تم إنشاء تصويت جديد في (${chanName}) وإرسال إشعار بريدي للأعضاء.`);
+    setEmailNotificationLog(`📊 تم إنشاء تصويت جديد في (${chanName}) وإرسال إشعار بريدي.`);
     setTimeout(() => setEmailNotificationLog(''), 6000);
   };
 
@@ -592,7 +774,7 @@ export default function App() {
     const cleanInvite = regInviteCode.trim().toUpperCase();
 
     if (cleanInvite !== TEAM_INVITE_CODE) {
-      setRegError('رمز دعوة الفريق غير صحيح. اطلب الرمز من إدارة Team .Cue.');
+      setRegError('رمز دعوة الفريق غير صحيح.');
       return;
     }
     if (cleanName.length < 3) {
@@ -600,13 +782,13 @@ export default function App() {
       return;
     }
     if (cleanPass.length < 4) {
-      setRegError('يجب أن يتكون الرمز السري من 4 خانات على الأقل.');
+      setRegError('يجب أن يتكون الرمز من 4 خانات على الأقل.');
       return;
     }
 
     const emailExists = allTeamMembers.some((m) => m.email.toLowerCase() === cleanEmail);
     if (emailExists) {
-      setRegError('هذا البريد الإلكتروني مسجل مسبقاً! يمكنك تسجيل الدخول مباشرة.');
+      setRegError('هذا البريد الإلكتروني مسجل مسبقاً!');
       return;
     }
 
@@ -623,10 +805,7 @@ export default function App() {
     };
 
     const updatedCustomMembers = [...customMembers, newMember];
-    const updatedPasswords = {
-      ...userPasswords,
-      [newMemberId]: cleanPass
-    };
+    const updatedPasswords = { ...userPasswords, [newMemberId]: cleanPass };
 
     setCustomMembers(updatedCustomMembers);
     setUserPasswords(updatedPasswords);
@@ -645,7 +824,7 @@ export default function App() {
     setCurrentUser(newMember);
   };
 
-  const handleDeleteCustomMember = async (memberId, memberName) => {
+  const handleDeleteCustomMember = async (memberId) => {
     if (!isManagementUser) return;
     const updatedCustomMembers = customMembers.filter((m) => m.id !== memberId);
     const updatedPasswords = { ...userPasswords };
@@ -686,7 +865,7 @@ export default function App() {
     setNewEventDate('');
     setShowAddEventModal(false);
 
-    setEmailNotificationLog('✉️ تم إرسال إشعار بريدي للفعالية الجديدة لجميع أعضاء الفريق عبر الإيميلات المسجلة.');
+    setEmailNotificationLog('✉️ تم إرسال إشعار بريدي للفعالية الجديدة.');
     setTimeout(() => setEmailNotificationLog(''), 6000);
   };
 
@@ -715,7 +894,9 @@ export default function App() {
     const newProj = {
       id: 'proj_' + Date.now(),
       title: newProjectTitle.trim(),
-      description: newProjectDesc.trim() || 'مجلد ملفات وفيديوهات العمل',
+      description: newProjectDesc.trim() || 'مجلد ملفات العمل',
+      status: newProjectStatus,
+      budgetTotal: newProjectBudget.trim() || 'غير محدد',
       createdBy: activeUserObj.name.split(' ')[0],
       date: new Date().toLocaleDateString('ar-SA')
     };
@@ -726,6 +907,7 @@ export default function App() {
 
     setNewProjectTitle('');
     setNewProjectDesc('');
+    setNewProjectBudget('');
     setShowAddProject(false);
   };
 
@@ -749,7 +931,6 @@ export default function App() {
       title: newAssetTitle.trim(),
       category: newAssetCategory,
       url: newAssetUrl.trim(),
-      size: newAssetSize.trim() || 'ملف سحابي',
       updatedBy: activeUserObj.name.split(' ')[0],
       date: new Date().toLocaleDateString('ar-SA')
     };
@@ -814,7 +995,7 @@ export default function App() {
 
     const targetChan = allChannels.find((c) => c.id === activeChannel);
     if (targetChan?.isNews && !isManagementUser) {
-      alert('عذراً، هذا القسم مخصص لنشر الأخبار من الإدارة فقط.');
+      alert('هذا القسم مخصص لنشر الأخبار من الإدارة فقط.');
       return;
     }
 
@@ -854,16 +1035,18 @@ export default function App() {
       id: Date.now().toString() + '_' + Math.random().toString(36).substr(2, 4),
       channelId: activeChannel,
       title: newDeptTaskTitle.trim(),
+      assignee: newDeptTaskAssignee.trim() || activeUserObj.name.split(' ')[0],
+      priority: newDeptTaskPriority,
+      dueDate: newDeptTaskDueDate || 'بدون موعد',
       fileName: newDeptTaskFileName.trim(),
       fileUrl: newDeptTaskFileUrl.trim(),
       status: 'todo',
-      priority: 'medium',
-      assignee: activeUserObj.name.split(' ')[0],
-      date: new Date().toISOString().split('T')[0],
       createdAt: Date.now()
     };
 
     setNewDeptTaskTitle('');
+    setNewDeptTaskAssignee('');
+    setNewDeptTaskDueDate('');
     setNewDeptTaskFileName('');
     setNewDeptTaskFileUrl('');
     setShowDeptTaskFileInputs(false);
@@ -872,7 +1055,7 @@ export default function App() {
     setTasks(nextTasks);
     updateGlobalStore({ tasks: nextTasks });
 
-    setEmailNotificationLog(`✉️ تم إرسال إشعار بريدي للمهمة الجديدة عبر البريد الإلكتروني لأعضاء (${chanName}) فقط.`);
+    setEmailNotificationLog(`✉️ تم إرسال إشعار بريدي للمهمة الجديدة لأعضاء (${chanName}).`);
     setTimeout(() => setEmailNotificationLog(''), 6000);
   };
 
@@ -897,10 +1080,13 @@ export default function App() {
       day: newCsDay.trim(),
       date: newCsDate.trim() || 'قريباً',
       location: newCsLocation.trim(),
+      mapLink: newCsMapLink.trim() || '',
+      parkingNotes: newCsParking.trim() || 'المواقف المعتمدة للطاقم',
       callTime: newCsCallTime.trim() || '07:00 صباحاً',
       weather: 'معتدل',
       scenes: newCsScenes.trim() || 'جميع مشاهد اليوم',
-      importantNotes: newCsNotes.trim() || 'الالتزام بمواعيد التجمع والالتزام بالزي المطلوب.'
+      importantNotes: newCsNotes.trim() || 'الالتزام بمواعيد التجمع والزي المطلوب.',
+      checkedInMembers: []
     };
 
     const nextCs = [newCs, ...callSheets];
@@ -910,6 +1096,8 @@ export default function App() {
     setNewCsDay('');
     setNewCsDate('');
     setNewCsLocation('');
+    setNewCsMapLink('');
+    setNewCsParking('');
     setNewCsCallTime('');
     setNewCsScenes('');
     setNewCsNotes('');
@@ -926,7 +1114,7 @@ export default function App() {
     e.preventDefault();
     setLoginError('');
     if (!isCloudLoaded) {
-      setLoginError('جاري الاتصال بقاعدة البيانات... انتظر ثانية ثم اضغط دخول.');
+      setLoginError('جاري الاتصال بقاعدة البيانات...');
       return;
     }
 
@@ -934,7 +1122,7 @@ export default function App() {
     const foundUser = allTeamMembers.find((m) => m.email.toLowerCase() === cleanEmail);
 
     if (!foundUser) {
-      setLoginError('البريد الإلكتروني غير مسجل. إذا كنت عضواً جديداً اضغط على "سجّل حسابك الآن" بالأسفل.');
+      setLoginError('البريد الإلكتروني غير مسجل.');
       return;
     }
 
@@ -942,7 +1130,7 @@ export default function App() {
     const activePassword = savedCustomPassword || DEFAULT_PASSWORD;
 
     if (activePassword !== loginPassword) {
-      setLoginError('الرمز السري غير صحيح. تأكد من إدخال رمزك الشخصي الخاص.');
+      setLoginError('الرمز السري غير صحيح.');
       return;
     }
 
@@ -965,23 +1153,19 @@ export default function App() {
 
     const cleanNewPass = newPasswordInput.trim();
     if (cleanNewPass.length < 4) {
-      setPasswordSetupError('يجب أن يتكون الرمز السري من 4 خانات على الأقل.');
+      setPasswordSetupError('يجب أن يكون الرمز 4 خانات على الأقل.');
       return;
     }
     if (cleanNewPass === DEFAULT_PASSWORD) {
-      setPasswordSetupError('يرجى اختيار رمز خاص بك يختلف عن الرمز الافتراضي.');
+      setPasswordSetupError('يرجى اختيار رمز خاص بك يختلف عن الافتراضي.');
       return;
     }
     if (cleanNewPass !== confirmPasswordInput.trim()) {
-      setPasswordSetupError('الرمزان غير متطابقين، يرجى التأكد وإعادة الإدخال.');
+      setPasswordSetupError('الرمزان غير متطابقين.');
       return;
     }
 
-    const updatedPasswords = {
-      ...userPasswords,
-      [targetUser.id]: cleanNewPass
-    };
-
+    const updatedPasswords = { ...userPasswords, [targetUser.id]: cleanNewPass };
     setUserPasswords(updatedPasswords);
     await updateGlobalStore({ userPasswords: updatedPasswords });
 
@@ -1001,7 +1185,7 @@ export default function App() {
     delete updatedPasswords[memberId];
     setUserPasswords(updatedPasswords);
     await updateGlobalStore({ userPasswords: updatedPasswords });
-    alert(`تمت إعادة ضبط رمز (${memberName}) للرمز الافتراضي، وسيُطلب منه تعيين رمز جديد عند دخوله القادم.`);
+    alert(`تمت إعادة ضبط رمز (${memberName}) للرمز الافتراضي.`);
   };
 
   const handleLogout = async () => {
@@ -1009,11 +1193,7 @@ export default function App() {
       const leavingId = currentUser.id;
       setOnlinePresence((prev) => ({ ...prev, [leavingId]: 0 }));
       try {
-        await setDoc(
-          workspaceDocRef,
-          { onlinePresence: { [leavingId]: 0 } },
-          { merge: true }
-        );
+        await setDoc(workspaceDocRef, { onlinePresence: { [leavingId]: 0 } }, { merge: true });
       } catch {}
     }
     setCurrentUser(null);
@@ -1054,54 +1234,51 @@ export default function App() {
             </div>
             <h2 className="text-xl font-bold text-amber-400">مرحباً {pendingUser.name.split(' ')[0]}!</h2>
             <p className="text-xs text-slate-300 leading-relaxed">
-              لحماية حسابك ومنع دخول أي شخص آخر، قم بتعيين <span className="text-amber-400 font-bold">رمز سري خاص بك</span> الآن (يُحفظ لحسابك بشكل دائم):
+              قم بتعيين <span className="text-amber-400 font-bold">رمز سري خاص بك</span> لحسابك:
             </p>
           </div>
 
           <form onSubmit={handleSavePersonalPassword} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري الجديد الخاص بك:</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري الجديد:</label>
               <input
                 type="password"
                 required
                 value={newPasswordInput}
                 onChange={(e) => setNewPasswordInput(e.target.value)}
-                placeholder="اكتب رمزك السري الخاص..."
+                placeholder="اكتب رمزك السري..."
                 className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
               />
             </div>
-
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1.5">تأكيد الرمز السري الجديد:</label>
+              <label className="block text-xs font-semibold text-slate-300 mb-1.5">تأكيد الرمز:</label>
               <input
                 type="password"
                 required
                 value={confirmPasswordInput}
                 onChange={(e) => setConfirmPasswordInput(e.target.value)}
-                placeholder="أعد كتابة الرمز السري..."
+                placeholder="أعد كتابة الرمز..."
                 className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
               />
             </div>
-
             {passwordSetupError && (
               <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
                 {passwordSetupError}
               </div>
             )}
-
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={handleLogout}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-xs transition-colors"
+                className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-3 rounded-xl text-xs"
               >
                 رجوع
               </button>
               <button
                 type="submit"
-                className="flex-[2] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm transition-colors"
+                className="flex-[2] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm"
               >
-                حفظ الرمز والدخول للمنصة
+                حفظ والدخول
               </button>
             </div>
           </form>
@@ -1119,7 +1296,7 @@ export default function App() {
             <h1 className="text-2xl font-bold text-amber-400">Team .Cue</h1>
             <p className="text-sm font-semibold text-amber-300/90">هنا نصنع الإبداع</p>
             <p className="text-[11px] text-slate-400">
-              {authMode === 'login' ? 'منصة المزامنة الحية الموحدة للفريق' : 'إنشاء حساب عضو جديد في الفريق'}
+              {authMode === 'login' ? 'منصة الاستوديو السينمائي الموحدة' : 'إنشاء حساب عضو جديد'}
             </p>
           </div>
 
@@ -1127,73 +1304,65 @@ export default function App() {
             <>
               <form onSubmit={handleLogin} className="space-y-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">البريد الإلكتروني المعتمد:</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">البريد الإلكتروني:</label>
                   <input
                     type="email"
                     required
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
-                    placeholder="أدخل بريدك الإلكتروني"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
+                    placeholder="name@example.com"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
                   />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري الخاص بك:</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">الرمز السري:</label>
                   <input
                     type="password"
                     required
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500 transition-colors"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-sm rounded-xl px-4 py-3 focus:outline-none focus:border-amber-500"
                   />
                 </div>
-
                 {loginError && (
                   <div className="p-3 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
                     {loginError}
                   </div>
                 )}
-
                 <button
                   type="submit"
-                  className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm transition-colors shadow-lg shadow-amber-500/10"
+                  className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl text-sm shadow-lg shadow-amber-500/10"
                 >
-                  تسجيل الدخول إلى حسابك
+                  تسجيل الدخول
                 </button>
               </form>
 
               <div className="text-center border-t border-slate-800 pt-4 space-y-2">
-                <p className="text-xs text-slate-400">عضو جديد في Team .Cue؟</p>
+                <p className="text-xs text-slate-400">عضو جديد في الفريق؟</p>
                 <button
                   type="button"
-                  onClick={() => {
-                    setAuthMode('register');
-                    setLoginError('');
-                    setRegError('');
-                  }}
-                  className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl text-xs border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                  onClick={() => { setAuthMode('register'); setLoginError(''); setRegError(''); }}
+                  className="w-full py-2.5 bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold rounded-xl text-xs border border-slate-700 flex items-center justify-center gap-1.5"
                 >
                   <UserPlus className="w-4 h-4" />
-                  <span>سجّل معلوماتك وأنشئ حسابك الآن</span>
+                  <span>سجّل حسابك الآن</span>
                 </button>
               </div>
             </>
           ) : (
             <form onSubmit={handleSelfRegister} className="space-y-3.5">
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">الاسم الكامل (الثلاثي):</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">الاسم الكامل:</label>
                 <input
                   type="text"
                   required
                   value={regName}
                   onChange={(e) => setRegName(e.target.value)}
-                  placeholder="مثال: سعد عبدالله العتيبي"
+                  placeholder="مثال: فهد السعود"
                   className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
                 />
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">القسم / التخصص:</label>
                 <select
@@ -1201,15 +1370,14 @@ export default function App() {
                   onChange={(e) => setRegRole(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
                 >
-                  <option value="Art Department">Art Department (قسم الديكور والفن)</option>
-                  <option value="Production Department">Production Department (قسم الإنتاج)</option>
-                  <option value="Directing Department">Directing Department (قسم الإخراج)</option>
-                  <option value="Post-Production Department">Post-Production Department (قسم المونتاج)</option>
-                  <option value="Cinematography Department">Cinematography Department (التصوير والإضاءة)</option>
+                  <option value="Art Department">Art Department (الديكور والفن)</option>
+                  <option value="Production Department">Production Department (الإنتاج)</option>
+                  <option value="Directing Department">Directing Department (الإخراج)</option>
+                  <option value="Cinematography Department">Cinematography Department (التصوير)</option>
+                  <option value="Post-Production Department">Post-Production Department (المونتاج)</option>
                 </select>
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-300 mb-1">رقم الجوال:</label>
                   <input
@@ -1218,22 +1386,21 @@ export default function App() {
                     value={regPhone}
                     onChange={(e) => setRegPhone(e.target.value)}
                     placeholder="05XXXXXXXX"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1">رمز دعوة الفريق:</label>
+                  <label className="block text-xs font-semibold text-slate-300 mb-1">رمز الدعوة:</label>
                   <input
                     type="text"
                     required
                     value={regInviteCode}
                     onChange={(e) => setRegInviteCode(e.target.value)}
-                    placeholder="اطلبه من الإدارة"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500 uppercase"
+                    placeholder="رمز الفريق"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 uppercase"
                   />
                 </div>
               </div>
-
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">البريد الإلكتروني:</label>
                 <input
@@ -1242,44 +1409,38 @@ export default function App() {
                   value={regEmail}
                   onChange={(e) => setRegEmail(e.target.value)}
                   placeholder="name@example.com"
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5"
                 />
               </div>
-
               <div>
-                <label className="block text-xs font-semibold text-slate-300 mb-1">اختر رمزك السري الخاص للدخول:</label>
+                <label className="block text-xs font-semibold text-slate-300 mb-1">الرمز السري الخاص:</label>
                 <input
                   type="password"
                   required
                   value={regPassword}
                   onChange={(e) => setRegPassword(e.target.value)}
-                  placeholder="4 خانات على الأقل..."
-                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-amber-500"
+                  placeholder="4 خانات على الأقل"
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 text-xs rounded-xl px-3.5 py-2.5"
                 />
               </div>
-
               {regError && (
                 <div className="p-2.5 bg-red-500/10 border border-red-500/30 rounded-xl text-xs text-red-400">
                   {regError}
                 </div>
               )}
-
               <div className="flex gap-2 pt-1">
                 <button
                   type="button"
-                  onClick={() => {
-                    setAuthMode('login');
-                    setRegError('');
-                  }}
-                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                  onClick={() => { setAuthMode('login'); setRegError(''); }}
+                  className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold py-2.5 rounded-xl text-xs"
                 >
-                  لديك حساب؟ دخول
+                  رجوع للدخول
                 </button>
                 <button
                   type="submit"
-                  className="flex-[2] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
+                  className="flex-[2] bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs"
                 >
-                  إنشاء الحساب والدخول
+                  إنشاء الحساب
                 </button>
               </div>
             </form>
@@ -1301,15 +1462,12 @@ export default function App() {
                 <p className="text-[11px] text-amber-300/80 font-medium mt-1">هنا نصنع الإبداع</p>
               </div>
             </div>
-            <button
-              onClick={() => setMobileSidebarOpen(false)}
-              className="md:hidden p-1 text-slate-400 hover:text-slate-100"
-            >
+            <button onClick={() => setMobileSidebarOpen(false)} className="md:hidden p-1 text-slate-400 hover:text-slate-100">
               <X className="w-5 h-5" />
             </button>
           </div>
 
-          <nav className="p-3 space-y-1">
+          <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-140px)]">
             <button
               onClick={() => { setActiveTab('chat'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
@@ -1321,13 +1479,33 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => { setActiveTab('calendar'); setMobileSidebarOpen(false); }}
+              onClick={() => { setActiveTab('shotlist'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'calendar' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+                activeTab === 'shotlist' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
-              <CalendarIcon className="w-4 h-4" />
-              <span>التقويم والأحداث</span>
+              <Camera className="w-4 h-4" />
+              <span>مركز Shot List والستوري بورد</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('cast'); setMobileSidebarOpen(false); }}
+              className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'cast' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>دليل الممثلين والشخصيات</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('budget'); setMobileSidebarOpen(false); }}
+              className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'budget' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <DollarSign className="w-4 h-4" />
+              <span>الميزانية والمصروفات</span>
             </button>
 
             <button
@@ -1341,17 +1519,23 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => {
-                setActiveTab('assets');
-                setSelectedProjectId(null);
-                setMobileSidebarOpen(false);
-              }}
+              onClick={() => { setActiveTab('calendar'); setMobileSidebarOpen(false); }}
+              className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+                activeTab === 'calendar' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
+              }`}
+            >
+              <CalendarIcon className="w-4 h-4" />
+              <span>التقويم والأحداث</span>
+            </button>
+
+            <button
+              onClick={() => { setActiveTab('assets'); setSelectedProjectId(null); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'assets' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
               <Folder className="w-4 h-4" />
-              <span>مكتبة الفريق</span>
+              <span>مكتبة المشاريع القائمة</span>
             </button>
 
             <button
@@ -1362,7 +1546,7 @@ export default function App() {
             >
               <div className="flex items-center space-x-3 space-x-reverse">
                 <Users className="w-4 h-4" />
-                <span>أعضاء الفريق</span>
+                <span>دليل الأفراد</span>
               </div>
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 font-bold">
                 {onlineCount} متصل
@@ -1381,23 +1565,16 @@ export default function App() {
               <p className="text-[10px] text-amber-400 truncate">{activeUserObj.role.split('|')[0]}</p>
             </div>
           </div>
-
           <button
-            onClick={() => {
-              setNewPasswordInput('');
-              setConfirmPasswordInput('');
-              setPasswordSetupError('');
-              setShowChangePasswordModal(true);
-            }}
-            className="w-full py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 rounded-lg text-[11px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+            onClick={() => { setNewPasswordInput(''); setConfirmPasswordInput(''); setPasswordSetupError(''); setShowChangePasswordModal(true); }}
+            className="w-full py-1.5 bg-slate-800/80 hover:bg-slate-800 text-slate-300 rounded-lg text-[11px] font-medium border border-slate-700 flex items-center justify-center gap-1.5"
           >
             <KeyRound className="w-3.5 h-3.5 text-amber-400" />
             <span>تغيير رمزي السري</span>
           </button>
-
           <button
             onClick={handleLogout}
-            className="w-full text-center py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium border border-red-500/20 transition-colors"
+            className="w-full text-center py-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs font-medium border border-red-500/20"
           >
             تسجيل الخروج
           </button>
@@ -1407,17 +1584,17 @@ export default function App() {
       <main className="flex-1 flex flex-col bg-slate-950 overflow-hidden relative w-full">
         <header className="h-14 bg-slate-900/60 border-b border-slate-800 px-4 md:px-6 flex items-center justify-between backdrop-blur-md">
           <div className="flex items-center space-x-3 space-x-reverse">
-            <button
-              onClick={() => setMobileSidebarOpen(true)}
-              className="md:hidden p-1.5 bg-slate-800 text-amber-400 rounded-lg border border-slate-700"
-            >
+            <button onClick={() => setMobileSidebarOpen(true)} className="md:hidden p-1.5 bg-slate-800 text-amber-400 rounded-lg border border-slate-700">
               <Menu className="w-5 h-5" />
             </button>
             <h2 className="font-bold text-slate-100 text-sm md:text-base truncate">
               {activeTab === 'chat' && (isDirectMessage && dmPartner ? `محادثة خاصة مع ${dmPartner.name}` : 'غرف التواصل ومهام الأقسام')}
+              {activeTab === 'shotlist' && 'مركز Shot List والستوري بورد (المخرج ومدير التصوير)'}
+              {activeTab === 'cast' && 'دليل طاقم التمثيل والشخصيات'}
+              {activeTab === 'budget' && 'نظام تتبع الميزانية والمصروفات'}
               {activeTab === 'calendar' && 'التقويم الملون وأحداث الفريق'}
-              {activeTab === 'callsheet' && 'أجندة يوم التصوير والمواقع'}
-              {activeTab === 'assets' && 'مكتبة الفريق والأعمال'}
+              {activeTab === 'callsheet' && 'أجندة يوم التصوير والإحداثيات (Call Sheet)'}
+              {activeTab === 'assets' && 'مكتبة المشاريع القائمة حالياً'}
               {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد من ${allTeamMembers.length})`}
             </h2>
           </div>
@@ -1435,13 +1612,14 @@ export default function App() {
         </header>
 
         {emailNotificationLog && (
-          <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-xs text-amber-300 flex items-center gap-2 animate-fade-in">
+          <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-xs text-amber-300 flex items-center gap-2">
             <BellRing className="w-4 h-4 text-amber-400 flex-shrink-0" />
             <span>{emailNotificationLog}</span>
           </div>
         )}
 
         <div className="flex-1 overflow-auto p-3 md:p-6">
+          {/* TAB: CHAT & DEPARTMENTS */}
           {activeTab === 'chat' && (
             <div className="h-full flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-64 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-4 max-h-48 md:max-h-full overflow-y-auto">
@@ -1488,27 +1666,21 @@ export default function App() {
                               {isUnlocked ? 'مفتوح' : 'مشفر'}
                             </span>
                           )}
-
                           {currentUser?.id === 'fahad' && channel.private && (
                             <button
                               type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setEditingChannelForPasscode(channel);
-                                setNewPasscodeInput('');
-                              }}
-                              className="p-1 text-slate-400 hover:text-amber-400 rounded hover:bg-amber-500/15 transition-colors"
-                              title="تغيير الرمز السري للقسم"
+                              onClick={(e) => { e.stopPropagation(); setEditingChannelForPasscode(channel); setNewPasscodeInput(''); }}
+                              className="p-1 text-slate-400 hover:text-amber-400 rounded hover:bg-amber-500/15"
+                              title="تغيير الرمز السري"
                             >
                               <KeyRound className="w-3.5 h-3.5" />
                             </button>
                           )}
-
                           {currentUser?.id === 'fahad' && isCustomDept && (
                             <button
                               type="button"
                               onClick={(e) => handleDeleteCustomChannel(channel.id, e)}
-                              className="p-1 text-slate-500 hover:text-red-400 rounded hover:bg-red-500/15 transition-colors"
+                              className="p-1 text-slate-500 hover:text-red-400 rounded"
                               title="حذف القسم"
                             >
                               <Trash2 className="w-3.5 h-3.5" />
@@ -1523,44 +1695,29 @@ export default function App() {
                 <div className="border-t border-slate-800 pt-3">
                   <div className="flex items-center justify-between px-2 mb-2">
                     <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider">المحادثات الخاصة</h3>
-                    <button
-                      onClick={() => { setActiveTab('team'); setMobileSidebarOpen(false); }}
-                      title="بدء محادثة جديدة من دليل الأعضاء"
-                      className="text-[10px] text-amber-400 hover:underline font-bold"
-                    >
+                    <button onClick={() => { setActiveTab('team'); setMobileSidebarOpen(false); }} className="text-[10px] text-amber-400 hover:underline font-bold">
                       + جديد
                     </button>
                   </div>
-
                   {dmPartnerList.length === 0 ? (
-                    <p className="text-[11px] text-slate-500 px-2 leading-relaxed">
-                      اختر عضواً من دليل الفريق لبدء محادثة فردية.
-                    </p>
+                    <p className="text-[11px] text-slate-500 px-2 leading-relaxed">اختر عضواً من دليل الفريق لبدء محادثة فردية.</p>
                   ) : (
                     <div className="space-y-1">
                       {dmPartnerList.map((member) => {
                         const dmId = getDirectChannelId(currentUser.id, member.id);
                         const online = isMemberOnline(member.id);
-                        const msgCount = messages.filter((m) => m.channelId === dmId).length;
                         return (
                           <button
                             key={member.id}
                             onClick={() => handleStartDirectChat(member)}
-                            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium transition-colors ${
-                              activeChannel === dmId
-                                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                                : 'text-slate-300 hover:bg-slate-800'
+                            className={`w-full flex items-center justify-between px-2.5 py-2 rounded-lg text-xs font-medium ${
+                              activeChannel === dmId ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-300 hover:bg-slate-800'
                             }`}
                           >
                             <div className="flex items-center gap-2 truncate">
                               <span className={`w-2 h-2 rounded-full flex-shrink-0 ${online ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
                               <span className="truncate">{member.name}</span>
                             </div>
-                            {msgCount > 0 && (
-                              <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-300">
-                                {msgCount}
-                              </span>
-                            )}
                           </button>
                         );
                       })}
@@ -1596,68 +1753,34 @@ export default function App() {
                             {allChannels.find((c) => c.id === activeChannel)?.name}
                           </span>
                         </div>
-
                         <div className="flex items-center bg-slate-900 p-1 rounded-lg border border-slate-800">
                           <button
                             onClick={() => setChannelSubTab('chat')}
-                            className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                              channelSubTab === 'chat'
-                                ? 'bg-amber-500 text-slate-950'
-                                : 'text-slate-400 hover:text-slate-200'
-                            }`}
+                            className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 ${channelSubTab === 'chat' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                           >
                             <MessageSquare className="w-3.5 h-3.5" />
                             <span>المحادثة</span>
                           </button>
                           <button
                             onClick={() => setChannelSubTab('tasks')}
-                            className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 transition-colors ${
-                              channelSubTab === 'tasks'
-                                ? 'bg-amber-500 text-slate-950'
-                                : 'text-slate-400 hover:text-slate-200'
-                            }`}
+                            className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 ${channelSubTab === 'tasks' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
                           >
                             <Kanban className="w-3.5 h-3.5" />
                             <span>مهام القسم ({currentChannelTasks.length})</span>
                           </button>
+                          {activeChannel === 'art' && (
+                            <button
+                              onClick={() => setChannelSubTab('props')}
+                              className={`px-3 py-1 rounded-md text-xs font-bold flex items-center gap-1.5 ${channelSubTab === 'props' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
+                            >
+                              <Box className="w-3.5 h-3.5" />
+                              <span>سجل الإكسسوارات والديكور</span>
+                            </button>
+                          )}
                         </div>
                       </>
                     )}
                   </div>
-
-                  {!isDirectMessage && (
-                    <div className="flex items-center gap-2 flex-wrap pt-1 border-t border-slate-800/60">
-                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
-                        <Users className="w-3 h-3 text-emerald-400" /> أعضاء القسم:
-                      </span>
-                      {activeMembersInChannel.length === 0 ? (
-                        <span className="text-[11px] text-slate-500">لا يوجد أعضاء مسجلون بعد</span>
-                      ) : (
-                        activeMembersInChannel.map((member) => {
-                          const online = isMemberOnline(member.id);
-                          const canRemove = isManagementUser;
-                          return (
-                            <span
-                              key={member.id}
-                              className="text-[10px] px-2 py-1 rounded-full bg-slate-800/90 text-slate-200 border border-slate-700/80 flex items-center gap-1.5"
-                            >
-                              <span className={`w-1.5 h-1.5 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-500'}`}></span>
-                              <span>{member.name}</span>
-                              {canRemove && (
-                                <button
-                                  onClick={() => handleRemoveMemberFromChannel(member.id, member.name)}
-                                  className="text-red-400 hover:text-red-300 ml-0.5 p-0.5 rounded hover:bg-red-500/20 transition-colors"
-                                  title="إخراج من القسم (طرد)"
-                                >
-                                  <UserMinus className="w-3 h-3" />
-                                </button>
-                              )}
-                            </span>
-                          );
-                        })
-                      )}
-                    </div>
-                  )}
                 </div>
 
                 {(isDirectMessage || channelSubTab === 'chat') ? (
@@ -1679,53 +1802,32 @@ export default function App() {
                                 </div>
                               </div>
                               {canDeletePoll && (
-                                <button
-                                  onClick={() => handleDeletePoll(poll.id)}
-                                  className="p-1 hover:bg-red-500/20 text-red-400 rounded transition-colors"
-                                  title="حذف التصويت"
-                                >
+                                <button onClick={() => handleDeletePoll(poll.id)} className="p-1 text-red-400 hover:text-red-300">
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               )}
                             </div>
-
                             <div className="space-y-2 pt-1">
                               {poll.options.map((option, idx) => {
                                 const optionVotes = option.votes.length;
                                 const percentage = totalVotes > 0 ? Math.round((optionVotes / totalVotes) * 100) : 0;
                                 const hasVotedThis = option.votes.includes(currentUser.id);
-
                                 return (
                                   <button
                                     key={idx}
                                     onClick={() => handleVotePoll(poll.id, idx)}
                                     className={`w-full text-right relative overflow-hidden p-2.5 rounded-lg border transition-all ${
-                                      hasVotedThis
-                                        ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-bold'
-                                        : 'bg-slate-900 border-slate-800 text-slate-300 hover:bg-slate-800/80'
+                                      hasVotedThis ? 'bg-amber-500/15 border-amber-500 text-amber-300 font-bold' : 'bg-slate-900 border-slate-800 text-slate-300'
                                     }`}
                                   >
-                                    <div
-                                      className="absolute inset-y-0 right-0 bg-amber-500/10 transition-all duration-300"
-                                      style={{ width: `${percentage}%` }}
-                                    ></div>
+                                    <div className="absolute inset-y-0 right-0 bg-amber-500/10" style={{ width: `${percentage}%` }}></div>
                                     <div className="relative flex justify-between items-center text-xs">
-                                      <div className="flex items-center gap-2">
-                                        <span className={`w-4 h-4 rounded-full border flex items-center justify-center text-[10px] ${hasVotedThis ? 'bg-amber-500 border-amber-500 text-slate-950 font-black' : 'border-slate-600'}`}>
-                                          {hasVotedThis && '✓'}
-                                        </span>
-                                        <span>{option.text}</span>
-                                      </div>
-                                      <span className="text-[11px] font-mono text-amber-400">
-                                        {optionVotes} صوت ({percentage}%)
-                                      </span>
+                                      <span>{option.text}</span>
+                                      <span className="text-[11px] font-mono text-amber-400">{optionVotes} صوت ({percentage}%)</span>
                                     </div>
                                   </button>
                                 );
                               })}
-                            </div>
-                            <div className="text-[10px] text-slate-500 text-left">
-                              إجمالي الأصوات: {totalVotes}
                             </div>
                           </div>
                         );
@@ -1733,199 +1835,236 @@ export default function App() {
 
                       {currentMessages.length === 0 && currentPolls.length === 0 ? (
                         <div className="h-full flex items-center justify-center text-slate-500 text-sm text-center px-4">
-                          {isDirectMessage && dmPartner
-                            ? `هذه بداية محادثتك الخاصة والمباشرة مع ${dmPartner.name}. اكتب رسالتك أو أنشئ تصويتاً!`
-                            : 'لا يوجد رسائل أو تصويتات بعد في هذه الغرفة. ابدأ بإرسال رسالة أو إنشاء تصويت!'}
+                          لا توجد رسائل بعد. ابدأ المحادثة أو أنشئ تصويتاً!
                         </div>
                       ) : (
                         currentMessages.map((msg) => {
                           const isMine = msg.senderId === currentUser.id;
-                          const canDeleteMessage = isMine || msg.sender === activeUserObj.name || (!isDirectMessage && isManagementUser);
                           return (
                             <div
                               key={msg.id}
                               className={`flex flex-col border p-3 rounded-xl max-w-xl ${
-                                isMine
-                                  ? 'bg-amber-500/10 border-amber-500/30 mr-auto'
-                                  : 'bg-slate-950/70 border-slate-800/80 ml-auto'
+                                isMine ? 'bg-amber-500/10 border-amber-500/30 mr-auto' : 'bg-slate-950/70 border-slate-800/80 ml-auto'
                               }`}
                             >
                               <div className="flex items-center justify-between gap-4 mb-1">
-                                <div className="flex items-center gap-1.5">
-                                  <span className="w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 text-[10px] flex items-center justify-center font-bold">
-                                    {msg.sender.charAt(0)}
-                                  </span>
-                                  <span className="text-xs font-bold text-amber-400">{msg.sender}</span>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] text-slate-500">{msg.timestamp}</span>
-                                  {canDeleteMessage && (
-                                    <button
-                                      onClick={() => handleDeleteMessage(msg.id)}
-                                      title="حذف الرسالة"
-                                      className="p-1 rounded hover:bg-red-500/20 text-slate-500 hover:text-red-400 transition-colors"
-                                    >
-                                      <Trash2 className="w-3.5 h-3.5" />
-                                    </button>
-                                  )}
-                                </div>
+                                <span className="text-xs font-bold text-amber-400">{msg.sender}</span>
+                                <span className="text-[10px] text-slate-500">{msg.timestamp}</span>
                               </div>
-
-                              {msg.text && <p className="text-xs text-slate-200 leading-relaxed select-text">{msg.text}</p>}
-
-                              {msg.image && (
-                                <div className="mt-2">
-                                  <img
-                                    src={msg.image}
-                                    alt="مرفق صورة"
-                                    className="max-h-60 rounded-lg object-cover border border-slate-700 cursor-pointer"
-                                    onClick={() => window.open(msg.image, '_blank')}
-                                  />
-                                </div>
-                              )}
+                              {msg.text && <p className="text-xs text-slate-200">{msg.text}</p>}
+                              {msg.image && <img src={msg.image} alt="مرفق" className="mt-2 max-h-60 rounded-lg object-cover" />}
                             </div>
                           );
                         })
                       )}
                     </div>
 
-                    {allChannels.find((c) => c.id === activeChannel)?.isNews && !isManagementUser ? (
-                      <div className="p-3 border-t border-slate-800 bg-slate-950/80 text-center text-xs text-amber-400">
-                        📢 هذا القسم للقراءة فقط (مخصص لنشر أخبار وتعاميم الفريق من الإدارة).
+                    <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex flex-col gap-2">
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setShowAddPollModal(true)}
+                          className="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 font-bold px-3 py-2.5 rounded-lg text-xs flex items-center gap-1.5"
+                        >
+                          <BarChart2 className="w-4 h-4" /> تصويت
+                        </button>
+                        <label className="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 font-bold px-3 py-2.5 rounded-lg text-xs flex items-center gap-1.5 cursor-pointer">
+                          <ImageIcon className="w-4 h-4" /> صورة
+                          <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
+                        </label>
+                        <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={inputMessage}
+                            onChange={(e) => setInputMessage(e.target.value)}
+                            placeholder="اكتب رسالتك..."
+                            className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500"
+                          />
+                          <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-xs flex items-center gap-1.5">
+                            <Send className="w-3.5 h-3.5" /> إرسال
+                          </button>
+                        </form>
                       </div>
-                    ) : (
-                      <div className="p-3 border-t border-slate-800 bg-slate-950/60 flex flex-col gap-2">
-                        {imageAttachment && (
-                          <div className="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-800 w-fit">
-                            <ImageIcon className="w-4 h-4 text-amber-400" />
-                            <span className="text-xs text-slate-300">تم إرفاق صورة جاهزة للإرسال</span>
-                            <button
-                              onClick={() => setImageAttachment(null)}
-                              className="text-red-400 hover:text-red-300 p-1"
-                            >
-                              <X className="w-3.5 h-3.5" />
+                    </div>
+                  </>
+                ) : channelSubTab === 'props' && activeChannel === 'art' ? (
+                  /* PROPS & INVENTORY TRACKER INSIDE ART DEPT */
+                  <div className="flex-1 overflow-y-auto p-4 space-y-4">
+                    <div className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
+                      <div>
+                        <h3 className="text-xs font-bold text-amber-400">سجل حجز وإدارة الإكسسوارات والديكور (Props & Inventory)</h3>
+                        <p className="text-[11px] text-slate-400">تتبع قطع الديكور والأثاث ومكان تواجدها وحالتها</p>
+                      </div>
+                      <button
+                        onClick={() => setShowAddProp(!showAddProp)}
+                        className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-2 rounded-lg text-xs flex items-center gap-1"
+                      >
+                        <Plus className="w-3.5 h-3.5" /> إضافة قطعة ديكور / إكسسوار
+                      </button>
+                    </div>
+
+                    {showAddProp && (
+                      <form onSubmit={handleAddProp} className="bg-slate-950 border border-amber-500/30 p-4 rounded-xl space-y-3 text-xs">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                          <input
+                            type="text"
+                            required
+                            value={newPropName}
+                            onChange={(e) => setNewPropName(e.target.value)}
+                            placeholder="اسم القطعة أو الإكسسوار..."
+                            className="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                          />
+                          <select
+                            value={newPropCat}
+                            onChange={(e) => setNewPropCat(e.target.value)}
+                            className="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                          >
+                            <option value="أثاث">أثاث</option>
+                            <option value="إكسسوارات شخصية">إكسسوارات شخصية</option>
+                            <option value="قطع تراثية">قطع تراثية</option>
+                            <option value="أجهزة ومعدات ديكور">أجهزة ومعدات ديكور</option>
+                          </select>
+                          <select
+                            value={newPropStatus}
+                            onChange={(e) => setNewPropStatus(e.target.value)}
+                            className="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                          >
+                            <option value="متاح">متاح في المستودع</option>
+                            <option value="في اللوكيشن">مستخدم في اللوكيشن</option>
+                            <option value="مستأجر">مستأجر (يجب إرجاعه)</option>
+                            <option value="تحت الصيانة">تحت الصيانة / التعديل</option>
+                          </select>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <input
+                            type="text"
+                            value={newPropLoc}
+                            onChange={(e) => setNewPropLoc(e.target.value)}
+                            placeholder="الموقع الحالي (مثال: المستودع أ / استوديو التصوير)"
+                            className="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                          />
+                          <input
+                            type="text"
+                            value={newPropAssign}
+                            onChange={(e) => setNewPropAssign(e.target.value)}
+                            placeholder="المسؤول عن القطعة"
+                            className="bg-slate-900 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                          />
+                        </div>
+                        <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2 rounded-lg">
+                          حفظ القطعة في السجل
+                        </button>
+                      </form>
+                    )}
+
+                    <div className="space-y-2">
+                      {propsInventory.length === 0 ? (
+                        <div className="text-center py-8 text-slate-500 text-xs">لا توجد قطع مسجلة حالياً.</div>
+                      ) : (
+                        propsInventory.map((prop) => (
+                          <div key={prop.id} className="bg-slate-950 border border-slate-800 p-3.5 rounded-xl flex items-center justify-between">
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-bold text-slate-100">{prop.name}</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-amber-500/10 text-amber-400 font-semibold">{prop.category}</span>
+                                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">{prop.status}</span>
+                              </div>
+                              <p className="text-[11px] text-slate-400 mt-1">الموقع: {prop.location} • المسؤول: {prop.assignedTo}</p>
+                            </div>
+                            <button onClick={() => handleDeleteProp(prop.id)} className="p-1.5 text-red-400 hover:bg-red-500/20 rounded-lg">
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
-                        )}
-
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setShowAddPollModal(true)}
-                            className="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 font-bold px-3 py-2.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors flex-shrink-0"
-                            title="إنشاء تصويت جديد"
-                          >
-                            <BarChart2 className="w-4 h-4" />
-                            <span className="hidden sm:inline">تصويت</span>
-                          </button>
-
-                          <label
-                            className="bg-slate-900 hover:bg-slate-800 text-amber-400 border border-slate-700 font-bold px-3 py-2.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors cursor-pointer flex-shrink-0"
-                            title="إرفاق صورة"
-                          >
-                            <ImageIcon className="w-4 h-4" />
-                            <span className="hidden sm:inline">صورة</span>
-                            <input type="file" accept="image/*" onChange={handleImageSelect} className="hidden" />
-                          </label>
-
-                          <form onSubmit={handleSendMessage} className="flex-1 flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={inputMessage}
-                              onChange={(e) => setInputMessage(e.target.value)}
-                              placeholder={
-                                isDirectMessage && dmPartner
-                                  ? `اكتب رسالة خاصة إلى ${dmPartner.name}...`
-                                  : `أرسل رسالة فورية إلى ${allChannels.find((c) => c.id === activeChannel)?.name}...`
-                              }
-                              className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2.5 focus:outline-none focus:border-amber-500"
-                            />
-                            <button
-                              type="submit"
-                              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2.5 rounded-lg text-xs flex items-center gap-1.5 transition-colors"
-                            >
-                              <Send className="w-3.5 h-3.5" />
-                              <span>إرسال</span>
-                            </button>
-                          </form>
-                        </div>
-                      </div>
-                    )}
-                  </>
+                        ))
+                      )}
+                    </div>
+                  </div>
                 ) : (
+                  /* TASKS TAB WITH DUE DATE, PRIORITY & ASSIGNEE */
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     <form onSubmit={handleAddDeptTask} className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl space-y-3">
-                      <div className="flex gap-2">
+                      <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                         <input
                           type="text"
+                          required
                           value={newDeptTaskTitle}
                           onChange={(e) => setNewDeptTaskTitle(e.target.value)}
-                          placeholder={`أضف مهمة جديدة لـ ${allChannels.find((c) => c.id === activeChannel)?.name}...`}
-                          className="flex-1 bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500"
+                          placeholder="عنوان المهمة..."
+                          className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
                         />
+                        <input
+                          type="text"
+                          value={newDeptTaskAssignee}
+                          onChange={(e) => setNewDeptTaskAssignee(e.target.value)}
+                          placeholder="المكلف بالمهمة (الاسم)"
+                          className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
+                        />
+                        <select
+                          value={newDeptTaskPriority}
+                          onChange={(e) => setNewDeptTaskPriority(e.target.value)}
+                          className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
+                        >
+                          <option value="high">أولوية: عالية 🔥</option>
+                          <option value="medium">أولوية: متوسطة ⚡</option>
+                          <option value="low">أولوية: منخفضة ☕</option>
+                        </select>
+                        <input
+                          type="date"
+                          value={newDeptTaskDueDate}
+                          onChange={(e) => setNewDeptTaskDueDate(e.target.value)}
+                          className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
+                        />
+                      </div>
+                      <div className="flex justify-between items-center pt-2">
                         <button
                           type="button"
                           onClick={() => setShowDeptTaskFileInputs(!showDeptTaskFileInputs)}
-                          className={`px-3 py-2 rounded-lg text-xs font-medium border flex items-center gap-1 transition-colors ${
-                            showDeptTaskFileInputs
-                              ? 'bg-amber-500/20 text-amber-400 border-amber-500/40'
-                              : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
-                          }`}
+                          className="text-xs text-amber-400 hover:underline flex items-center gap-1"
                         >
-                          <Paperclip className="w-3.5 h-3.5" />
-                          <span>إرفاق ملف</span>
+                          <Paperclip className="w-3.5 h-3.5" /> إرفاق ملف بالمهمة
                         </button>
-                        <button
-                          type="submit"
-                          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs flex items-center gap-1"
-                        >
-                          <Plus className="w-3.5 h-3.5" /> إضافة
+                        <button type="submit" className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-lg text-xs flex items-center gap-1">
+                          <Plus className="w-3.5 h-3.5" /> إضافة المهمة
                         </button>
                       </div>
 
                       {showDeptTaskFileInputs && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-800/80">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pt-2 border-t border-slate-800">
                           <input
                             type="text"
                             value={newDeptTaskFileName}
                             onChange={(e) => setNewDeptTaskFileName(e.target.value)}
-                            placeholder="اسم الملف المرفق (مثال: قائمة الديكور.pdf)"
-                            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500"
+                            placeholder="اسم الملف (مثال: جدول.pdf)"
+                            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
                           />
                           <input
                             type="url"
                             value={newDeptTaskFileUrl}
                             onChange={(e) => setNewDeptTaskFileUrl(e.target.value)}
-                            placeholder="رابط الملف (Google Drive / رابط مباشر)..."
-                            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 focus:outline-none focus:border-amber-500"
+                            placeholder="رابط الملف..."
+                            className="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2"
                           />
                         </div>
                       )}
                     </form>
 
-                    {currentChannelTasks.length === 0 ? (
-                      <div className="text-center py-12 text-slate-500 text-xs bg-slate-950/40 border border-slate-800/60 rounded-xl">
-                        لا توجد مهام مضافة في هذا القسم حالياً. أضف أول مهمة بالأعلى!
-                      </div>
-                    ) : (
-                      <div className="space-y-2.5">
-                        {currentChannelTasks.map((task) => (
+                    <div className="space-y-2.5">
+                      {currentChannelTasks.length === 0 ? (
+                        <div className="text-center py-12 text-slate-500 text-xs">لا توجد مهام في هذا القسم.</div>
+                      ) : (
+                        currentChannelTasks.map((task) => (
                           <div
                             key={task.id}
-                            className={`p-3.5 rounded-xl border flex flex-col gap-2 transition-colors ${
-                              task.status === 'done'
-                                ? 'bg-slate-950/40 border-emerald-500/20 opacity-75'
-                                : 'bg-slate-950 border-slate-800'
+                            className={`p-3.5 rounded-xl border flex flex-col gap-2 ${
+                              task.status === 'done' ? 'bg-slate-950/40 border-emerald-500/20 opacity-75' : 'bg-slate-950 border-slate-800'
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2">
                               <div className="flex items-center gap-2.5">
                                 <button
                                   onClick={() => handleCompleteTask(task.id)}
-                                  className={`w-5 h-5 rounded-md border flex items-center justify-center transition-colors ${
-                                    task.status === 'done'
-                                      ? 'bg-emerald-500 border-emerald-500 text-slate-950'
-                                      : 'border-slate-600 hover:border-amber-400'
+                                  className={`w-5 h-5 rounded-md border flex items-center justify-center ${
+                                    task.status === 'done' ? 'bg-emerald-500 border-emerald-500 text-slate-950' : 'border-slate-600'
                                   }`}
                                 >
                                   {task.status === 'done' && <Check className="w-3.5 h-3.5" />}
@@ -1934,85 +2073,30 @@ export default function App() {
                                   {task.title}
                                 </span>
                               </div>
-
                               <div className="flex items-center gap-2">
-                                <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-400">{task.assignee}</span>
-                                <button
-                                  onClick={() => handleDeleteTask(task.id)}
-                                  title="حذف المهمة"
-                                  className="p-1 hover:bg-red-500/20 text-red-400 rounded transition-colors"
-                                >
+                                <span className={`text-[10px] px-2 py-0.5 rounded font-bold ${
+                                  task.priority === 'high' ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
+                                }`}>
+                                  {task.priority === 'high' ? 'عالية' : task.priority === 'low' ? 'منخفضة' : 'متوسطة'}
+                                </span>
+                                <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-amber-400">المكلف: {task.assignee}</span>
+                                <span className="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-slate-400">الاستحقاق: {task.dueDate}</span>
+                                <button onClick={() => handleDeleteTask(task.id)} className="p-1 text-red-400 hover:bg-red-500/20 rounded">
                                   <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             </div>
-
-                            {(task.fileName || task.fileUrl) && (
-                              <div className="mr-7 flex items-center gap-2 text-[11px] bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg w-fit">
+                            {task.fileUrl && (
+                              <div className="mr-7 flex items-center gap-2 text-[11px] bg-slate-900 border border-slate-800 px-3 py-1 rounded-lg w-fit">
                                 <Paperclip className="w-3.5 h-3.5 text-amber-400" />
-                                <span className="text-slate-300">{task.fileName || 'ملف مرفق'}</span>
-                                {task.fileUrl && (
-                                  <a
-                                    href={task.fileUrl}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-amber-400 hover:underline font-bold mr-1"
-                                  >
-                                    فتح الملف ↗
-                                  </a>
-                                )}
+                                <a href={task.fileUrl} target="_blank" rel="noopener noreferrer" className="text-amber-400 hover:underline font-bold">
+                                  {task.fileName || 'فتح الملف المرفق'} ↗
+                                </a>
                               </div>
                             )}
                           </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {passcodeModalChannel && (
-                  <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4 text-center">
-                      <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 text-red-400 flex items-center justify-center mx-auto">
-                        <Lock className="w-6 h-6" />
-                      </div>
-                      <div>
-                        <h3 className="font-bold text-slate-100 text-base">غرفة قسم مشفرة</h3>
-                        <p className="text-xs text-slate-400 mt-1">
-                          أدخل رمز الحماية (Passcode) الخاص بـ <span className="text-amber-400 font-bold">{passcodeModalChannel.name}</span> للدخول:
-                        </p>
-                      </div>
-
-                      <form onSubmit={handleVerifyPasscode} className="space-y-3">
-                        <input
-                          type="password"
-                          maxLength={6}
-                          value={enteredPasscode}
-                          onChange={(e) => setEnteredPasscode(e.target.value)}
-                          placeholder="أدخل الرمز السرّي..."
-                          className="w-full text-center tracking-widest text-lg font-mono bg-slate-950 border border-slate-700 text-slate-100 rounded-xl py-2.5 focus:outline-none focus:border-amber-500"
-                        />
-
-                        {passcodeError && (
-                          <p className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg">{passcodeError}</p>
-                        )}
-
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setPasscodeModalChannel(null)}
-                            className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2 rounded-xl text-xs font-bold transition-colors"
-                          >
-                            إلغاء
-                          </button>
-                          <button
-                            type="submit"
-                            className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2 rounded-xl text-xs font-bold transition-colors"
-                          >
-                            تأكيد الرمز
-                          </button>
-                        </div>
-                      </form>
+                        ))
+                      )}
                     </div>
                   </div>
                 )}
@@ -2020,202 +2104,380 @@ export default function App() {
             </div>
           )}
 
-          {activeTab === 'calendar' && (
-            <div className="space-y-6 max-w-4xl mx-auto">
+          {/* TAB: SHOT LIST & STORYBOARD HUB */}
+          {activeTab === 'shotlist' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                 <div>
-                  <h3 className="text-sm font-bold text-amber-400">تقويم أحداث ومواعيد الفريق</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">تابع مواعيد التصوير، البروفات، والاجتماعات بالألوان المخصصة</p>
+                  <h3 className="text-sm font-bold text-amber-400">مركز الـ Shot List والستوري بورد الموحد</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">تنسيق مباشر بين المخرج ومدير التصوير لتحديد زوايا وحركات الكاميرا لكل مشهد</p>
                 </div>
                 <button
-                  onClick={() => setShowAddEventModal(!showAddEventModal)}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+                  onClick={() => setShowAddShotList(!showAddShotList)}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
                 >
-                  <Plus className="w-4 h-4" /> {showAddEventModal ? 'إغلاق النموذج' : 'إضافة موعد / حدث'}
+                  <Plus className="w-4 h-4" /> {showAddShotList ? 'إغلاق النموذج' : 'إضافة لقطة جديدة (Shot)'}
                 </button>
               </div>
 
-              {showAddEventModal && (
-                <form onSubmit={handleAddCalendarEvent} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-amber-400">إضافة فعالية جديدة للتقويم وإرسال إشعار بريدي للفريق</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                    <div>
-                      <label className="block text-slate-400 mb-1">عنوان الحدث:</label>
-                      <input
-                        type="text"
-                        required
-                        value={newEventTitle}
-                        onChange={(e) => setNewEventTitle(e.target.value)}
-                        placeholder="مثال: تصوير المشهد الخارجي..."
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 mb-1">التاريخ:</label>
-                      <input
-                        type="date"
-                        required
-                        value={newEventDate}
-                        onChange={(e) => setNewEventDate(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 mb-1">تصنيف اللون (نوع النشاط):</label>
-                      <select
-                        value={newEventColor}
-                        onChange={(e) => setNewEventColor(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                      >
-                        <option value="amber">أصفر (تصوير ومشاهد)</option>
-                        <option value="purple">بنفسجي (بروفات وعروض)</option>
-                        <option value="emerald">أخضر (اجتماعات وإدارة)</option>
-                        <option value="blue">أزرق (مونتاج ومونيتور)</option>
-                        <option value="rose">أحمر وردي (موعد نهائي / Deadline)</option>
-                      </select>
-                    </div>
+              {showAddShotList && (
+                <form onSubmit={handleAddShotList} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <input
+                      type="text"
+                      required
+                      value={newSlScene}
+                      onChange={(e) => setNewSlScene(e.target.value)}
+                      placeholder="رقم / اسم المشهد (مثال: المشهد 2)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={newSlNum}
+                      onChange={(e) => setNewSlNum(e.target.value)}
+                      placeholder="رقم اللقطة (مثال: Shot 3)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <select
+                      value={newSlSize}
+                      onChange={(e) => setNewSlSize(e.target.value)}
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    >
+                      <option value="Extreme Wide Shot (EWS)">Extreme Wide Shot (EWS)</option>
+                      <option value="Wide Shot (WS)">Wide Shot (WS)</option>
+                      <option value="Medium Shot (MS)">Medium Shot (MS)</option>
+                      <option value="Close Up (CU)">Close Up (CU)</option>
+                      <option value="Extreme Close Up (ECU)">Extreme Close Up (ECU)</option>
+                    </select>
+                    <input
+                      type="text"
+                      value={newSlMovement}
+                      onChange={(e) => setNewSlMovement(e.target.value)}
+                      placeholder="حركة الكاميرا (Panning / Tracking)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
                   </div>
-                  <button
-                    type="submit"
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
-                  >
-                    حفظ الموعد في التقويم وإرسال الإشعار
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      value={newSlLens}
+                      onChange={(e) => setNewSlLens(e.target.value)}
+                      placeholder="العدسة المستخدمة (مثال: 35mm أو 85mm)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      value={newSlAssign}
+                      onChange={(e) => setNewSlAssign(e.target.value)}
+                      placeholder="المسؤول (المخرج / مدير التصوير)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      value={newSlDesc}
+                      onChange={(e) => setNewSlDesc(e.target.value)}
+                      placeholder="وصف الوصف وتكوين الكادر..."
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                    حفظ اللقطة في قائمة الـ Shot List
                   </button>
                 </form>
               )}
 
-              {calendarEvents.length === 0 ? (
-                <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                  لا توجد أحداث مضافة في التقويم حالياً. اضغط على "إضافة موعد / حدث" للبدء.
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 gap-3">
-                  {calendarEvents.map((ev) => {
-                    const colorStyles = {
-                      amber: 'bg-amber-500/15 border-amber-500/30 text-amber-400',
-                      purple: 'bg-purple-500/15 border-purple-500/30 text-purple-400',
-                      emerald: 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400',
-                      blue: 'bg-blue-500/15 border-blue-500/30 text-blue-400',
-                      rose: 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-                    }[ev.color] || 'bg-slate-800 border-slate-700 text-slate-300';
-
-                    const dotColor = {
-                      amber: 'bg-amber-400',
-                      purple: 'bg-purple-400',
-                      emerald: 'bg-emerald-400',
-                      blue: 'bg-blue-400',
-                      rose: 'bg-rose-400'
-                    }[ev.color] || 'bg-slate-400';
-
-                    return (
-                      <div key={ev.id} className={`p-4 rounded-xl border flex items-center justify-between gap-4 ${colorStyles}`}>
-                        <div className="flex items-center gap-3">
-                          <span className={`w-3 h-3 rounded-full flex-shrink-0 ${dotColor}`}></span>
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-100">{ev.title}</h4>
-                            <p className="text-[11px] opacity-80 mt-0.5">التصنيف: {ev.category} • التاريخ: {ev.date}</p>
-                          </div>
+              <div className="grid grid-cols-1 gap-3">
+                {shotLists.length === 0 ? (
+                  <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
+                    لا توجد لقطات مسجلة حتى الآن. ابدأ بإضافة اللقطات!
+                  </div>
+                ) : (
+                  shotLists.map((sl) => (
+                    <div key={sl.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between gap-4">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-2.5 py-1 bg-amber-500/20 text-amber-400 rounded text-xs font-bold">{sl.scene} - لقطة {sl.shotNum}</span>
+                          <span className="text-xs font-semibold text-slate-200">{sl.shotSize}</span>
+                          <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">حركة: {sl.movement}</span>
+                          <span className="text-[11px] px-2 py-0.5 rounded bg-slate-950 text-amber-300">عدسة: {sl.lens}</span>
                         </div>
-                        <button
-                          onClick={() => handleDeleteCalendarEvent(ev.id)}
-                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 transition-colors"
-                          title="حذف الحدث"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
+                        <p className="text-xs text-slate-400 mt-2">{sl.description}</p>
+                        <p className="text-[10px] text-slate-500 mt-1">بواسطة: {sl.assignedTo}</p>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
+                      <button onClick={() => handleDeleteShotList(sl.id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           )}
 
+          {/* TAB: CAST & TALENT DIRECTORY */}
+          {activeTab === 'cast' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <div>
+                  <h3 className="text-sm font-bold text-amber-400">دليل طاقم التمثيل والشخصيات (Cast & Talent)</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">أسماء الشخصيات، الممثلين، أوقات البروفات، وملاحظات الأزياء والمكياج</p>
+                </div>
+                <button
+                  onClick={() => setShowAddCast(!showAddCast)}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" /> {showAddCast ? 'إغلاق النموذج' : 'إضافة ممثل / شخصية'}
+                </button>
+              </div>
+
+              {showAddCast && (
+                <form onSubmit={handleAddCast} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      required
+                      value={newCastChar}
+                      onChange={(e) => setNewCastChar(e.target.value)}
+                      placeholder="اسم الشخصية (مثال: سلطان)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={newCastActor}
+                      onChange={(e) => setNewCastActor(e.target.value)}
+                      placeholder="اسم الممثل"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="tel"
+                      value={newCastPhone}
+                      onChange={(e) => setNewCastPhone(e.target.value)}
+                      placeholder="رقم الجوال"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      value={newCastCostume}
+                      onChange={(e) => setNewCastCostume(e.target.value)}
+                      placeholder="ملاحظات الأزياء والمكياج"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      value={newCastRehearsal}
+                      onChange={(e) => setNewCastRehearsal(e.target.value)}
+                      placeholder="موعد البروفة"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                    حفظ الممثل في الدليل
+                  </button>
+                </form>
+              )}
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {castList.length === 0 ? (
+                  <div className="col-span-2 bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
+                    لا يوجد ممثلين مسجلين بعد.
+                  </div>
+                ) : (
+                  castList.map((c) => (
+                    <div key={c.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl space-y-3">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <span className="text-[10px] bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded font-bold">شخصية: {c.characterName}</span>
+                          <h4 className="text-sm font-bold text-slate-100 mt-1">{c.actorName}</h4>
+                        </div>
+                        <button onClick={() => handleDeleteCast(c.id)} className="p-1.5 text-red-400 hover:bg-red-500/20 rounded">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <div className="text-xs space-y-1 text-slate-400 pt-2 border-t border-slate-800">
+                        <p>📞 الجوال: {c.phone}</p>
+                        <p>👔 الأزياء: {c.costumeNotes}</p>
+                        <p className="text-amber-300">📅 موعد البروفة: {c.rehearsalTime}</p>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: BUDGET & EXPENSES */}
+          {activeTab === 'budget' && (
+            <div className="space-y-6 max-w-5xl mx-auto">
+              <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <div>
+                  <h3 className="text-sm font-bold text-amber-400">نظام تتبع الميزانية والمصروفات (Budget Tracker)</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">متابعة تكاليف الإنتاج، الديكور، الإيجارات، والمصروفات اليومية</p>
+                </div>
+                <button
+                  onClick={() => setShowAddBudget(!showAddBudget)}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" /> {showAddBudget ? 'إغلاق النموذج' : 'إضافة مصروف / بند'}
+                </button>
+              </div>
+
+              {showAddBudget && (
+                <form onSubmit={handleAddBudget} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                    <input
+                      type="text"
+                      required
+                      value={newBTitle}
+                      onChange={(e) => setNewBTitle(e.target.value)}
+                      placeholder="اسم البند أو التكلفة..."
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <select
+                      value={newBCat}
+                      onChange={(e) => setNewBCat(e.target.value)}
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    >
+                      <option value="إنتاج">إنتاج ومعدات</option>
+                      <option value="فنون وديكور">فنون وديكور</option>
+                      <option value="إخراج وطاقم">إخراج وطاقم</option>
+                      <option value="مواقع وتصاريح">مواقع وتصاريح</option>
+                      <option value="أخرى">أخرى</option>
+                    </select>
+                    <input
+                      type="number"
+                      required
+                      value={newBAmount}
+                      onChange={(e) => setNewBAmount(e.target.value)}
+                      placeholder="المبلغ (ريال)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <select
+                      value={newBType}
+                      onChange={(e) => setNewBType(e.target.value)}
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    >
+                      <option value="مصروف">مصروف (Expense)</option>
+                      <option value="تمويل">تمويل / ميزانية مرصودة</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                    حفظ البند المالي
+                  </button>
+                </form>
+              )}
+
+              <div className="space-y-3">
+                {budgetItems.length === 0 ? (
+                  <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
+                    لا توجد بنود ميزانية مسجلة حتى الآن.
+                  </div>
+                ) : (
+                  budgetItems.map((b) => (
+                    <div key={b.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-bold text-slate-100">{b.title}</span>
+                          <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-amber-400">{b.category}</span>
+                          <span className={`text-[10px] px-2 py-0.5 rounded ${b.type === 'تمويل' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
+                            {b.type}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-400 mt-1">التاريخ: {b.date}</p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="text-base font-bold font-mono text-amber-400">{b.amount} ريال</span>
+                        <button onClick={() => handleDeleteBudget(b.id)} className="p-1.5 text-red-400 hover:bg-red-500/20 rounded">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: CALL SHEET (WITH MAPS, PARKING & CHECK-IN) */}
           {activeTab === 'callsheet' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold text-slate-200">أجندة أيام التصوير الحالية</h3>
+                <h3 className="text-sm font-bold text-slate-200">أجندة أيام التصوير وإحداثيات اللوكيشن (Call Sheet)</h3>
                 <button
                   onClick={() => setShowAddCallSheet(!showAddCallSheet)}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
                 >
                   <Plus className="w-4 h-4" /> {showAddCallSheet ? 'إغلاق النموذج' : 'إضافة يوم تصوير جديد'}
                 </button>
               </div>
 
               {showAddCallSheet && (
-                <form onSubmit={handleAddCallSheet} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4">
-                  <h4 className="text-xs font-bold text-amber-400">إضافة جدول يوم تصوير جديد (Call Sheet)</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="block text-slate-400 mb-1">عنوان اليوم:</label>
-                      <input
-                        type="text"
-                        required
-                        value={newCsDay}
-                        onChange={(e) => setNewCsDay(e.target.value)}
-                        placeholder="اليوم الأول / الثاني..."
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 mb-1">التاريخ:</label>
-                      <input
-                        type="date"
-                        value={newCsDate}
-                        onChange={(e) => setNewCsDate(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 mb-1">موقع التصوير (Location):</label>
-                      <input
-                        type="text"
-                        required
-                        value={newCsLocation}
-                        onChange={(e) => setNewCsLocation(e.target.value)}
-                        placeholder="الدرعية / استديو..."
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-slate-400 mb-1">وقت التجمع (Call Time):</label>
-                      <input
-                        type="text"
-                        value={newCsCallTime}
-                        onChange={(e) => setNewCsCallTime(e.target.value)}
-                        placeholder="06:30 صباحاً"
-                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="text-xs">
-                    <label className="block text-slate-400 mb-1">المشاهد المستهدفة:</label>
+                <form onSubmit={handleAddCallSheet} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <input
                       type="text"
-                      value={newCsScenes}
-                      onChange={(e) => setNewCsScenes(e.target.value)}
-                      placeholder="المشهد 1، المشهد 3 (خارجي/ليل)"
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
+                      required
+                      value={newCsDay}
+                      onChange={(e) => setNewCsDay(e.target.value)}
+                      placeholder="عنوان اليوم (مثال: اليوم الأول)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="date"
+                      value={newCsDate}
+                      onChange={(e) => setNewCsDate(e.target.value)}
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={newCsLocation}
+                      onChange={(e) => setNewCsLocation(e.target.value)}
+                      placeholder="موقع التصوير (الدرعية التاريخية...)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="url"
+                      value={newCsMapLink}
+                      onChange={(e) => setNewCsMapLink(e.target.value)}
+                      placeholder="رابط إحداثيات الخريطة (Google Maps URL)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
                     />
                   </div>
-
-                  <div className="text-xs">
-                    <label className="block text-slate-400 mb-1">ملاحظات وتعليمات هامّة:</label>
-                    <textarea
-                      value={newCsNotes}
-                      onChange={(e) => setNewCsNotes(e.target.value)}
-                      placeholder="تعليمات الملابس، الحضور، الإحداثيات..."
-                      rows={2}
-                      className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <input
+                      type="text"
+                      value={newCsParking}
+                      onChange={(e) => setNewCsParking(e.target.value)}
+                      placeholder="ملاحظات مواقف السيارات والتجمع (Parking)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="text"
+                      value={newCsCallTime}
+                      onChange={(e) => setNewCsCallTime(e.target.value)}
+                      placeholder="وقت التجمع (Call Time: 06:30 صباحاً)"
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
                     />
                   </div>
-
-                  <button
-                    type="submit"
-                    className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
-                  >
+                  <input
+                    type="text"
+                    value={newCsScenes}
+                    onChange={(e) => setNewCsScenes(e.target.value)}
+                    placeholder="المشاهد المستهدفة لهذا اليوم"
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                  />
+                  <textarea
+                    value={newCsNotes}
+                    onChange={(e) => setNewCsNotes(e.target.value)}
+                    placeholder="تعليمات هامة للطاقم..."
+                    rows={2}
+                    className="w-full bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                  />
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
                     حفظ ونشر جدول التصوير
                   </button>
                 </form>
@@ -2223,298 +2485,361 @@ export default function App() {
 
               {callSheets.length === 0 ? (
                 <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                  لا يوجد جدول تصوير مضاف حالياً. يمكنك إضافة يوم جديد بالضغط على "إضافة يوم تصوير جديد".
+                  لا يوجد جدول تصوير مضاف حالياً.
                 </div>
               ) : (
-                callSheets.map((cs) => (
-                  <div key={cs.id} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4 relative">
-                    <div className="flex justify-between items-start border-b border-slate-800 pb-4">
-                      <div>
-                        <span className="text-xs text-amber-500 font-bold">{cs.day}</span>
-                        <h3 className="text-xl font-bold text-slate-100">{cs.date}</h3>
+                callSheets.map((cs) => {
+                  const checkedInCount = (cs.checkedInMembers || []).length;
+                  const isCheckedInByMe = (cs.checkedInMembers || []).includes(currentUser?.id);
+
+                  return (
+                    <div key={cs.id} className="bg-slate-900 border border-slate-800 rounded-xl p-6 space-y-4">
+                      <div className="flex justify-between items-start border-b border-slate-800 pb-4">
+                        <div>
+                          <span className="text-xs text-amber-500 font-bold">{cs.day}</span>
+                          <h3 className="text-xl font-bold text-slate-100">{cs.date}</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full text-xs font-bold">
+                            {cs.weather}
+                          </span>
+                          <button onClick={() => handleDeleteCallSheet(cs.id)} className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-xs">
+                            حذف
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-400 rounded-full text-xs font-bold">
-                          {cs.weather}
-                        </span>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                        <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <MapPin className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                            <div>
+                              <div className="text-slate-400">موقع التصوير:</div>
+                              <div className="font-bold text-slate-200">{cs.location}</div>
+                            </div>
+                          </div>
+                          {cs.mapLink && (
+                            <a
+                              href={cs.mapLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="px-3 py-1.5 bg-amber-500 text-slate-950 font-bold rounded-lg text-xs flex items-center gap-1 hover:bg-amber-400"
+                            >
+                              <Navigation className="w-3.5 h-3.5" /> الخريطة
+                            </a>
+                          )}
+                        </div>
+
+                        <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-center gap-3">
+                          <Clock className="w-5 h-5 text-amber-500 flex-shrink-0" />
+                          <div>
+                            <div className="text-slate-400">وقت التجمع (Call Time):</div>
+                            <div className="font-bold text-amber-400 text-sm">{cs.callTime}</div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {cs.parkingNotes && (
+                        <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 text-xs">
+                          <span className="text-amber-400 font-bold">🅿️ مواقف السيارات والتجمع: </span>
+                          <span className="text-slate-300">{cs.parkingNotes}</span>
+                        </div>
+                      )}
+
+                      <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 flex items-center justify-between">
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-300">سجل حضور الموقع (Digital Check-in):</h4>
+                          <p className="text-[11px] text-slate-400 mt-0.5">عدد الحاضرين في الموقع حتى الآن: <span className="text-emerald-400 font-bold">{checkedInCount} عضواً</span></p>
+                        </div>
                         <button
-                          onClick={() => handleDeleteCallSheet(cs.id)}
-                          className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 text-xs transition-colors flex items-center gap-1"
-                          title="حذف هذا اليوم"
+                          onClick={() => handleCheckInCallSheet(cs.id)}
+                          className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors ${
+                            isCheckedInByMe ? 'bg-emerald-500 text-slate-950' : 'bg-slate-800 hover:bg-slate-700 text-amber-400 border border-amber-500/30'
+                          }`}
                         >
-                          <X className="w-4 h-4" /> حذف
+                          <CheckCircle2 className="w-4 h-4" />
+                          {isCheckedInByMe ? 'تم تسجيل حضورك في الموقع ✓' : 'تسجيل وصولي للموقع الآن'}
                         </button>
                       </div>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-center gap-3">
-                        <MapPin className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-slate-400">موقع التصوير:</div>
-                          <div className="font-bold text-slate-200">{cs.location}</div>
-                        </div>
+                      <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
+                        <h4 className="text-xs font-bold text-slate-300 mb-1">المشاهد المستهدفة:</h4>
+                        <p className="text-xs text-slate-400">{cs.scenes}</p>
                       </div>
 
-                      <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 flex items-center gap-3">
-                        <Clock className="w-5 h-5 text-amber-500 flex-shrink-0" />
-                        <div>
-                          <div className="text-slate-400">وقت التجمع (Call Time):</div>
-                          <div className="font-bold text-amber-400 text-sm">{cs.callTime}</div>
-                        </div>
+                      <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-300">
+                        <strong>ملاحظة هامة:</strong> {cs.importantNotes}
                       </div>
                     </div>
-
-                    <div className="bg-slate-950 p-4 rounded-lg border border-slate-800">
-                      <h4 className="text-xs font-bold text-slate-300 mb-1">المشاهد المستهدفة:</h4>
-                      <p className="text-xs text-slate-400">{cs.scenes}</p>
-                    </div>
-
-                    <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs text-amber-300">
-                      <strong>ملاحظة هامة:</strong> {cs.importantNotes}
-                    </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           )}
 
+          {/* TAB: CALENDAR */}
+          {activeTab === 'calendar' && (
+            <div className="space-y-6 max-w-4xl mx-auto">
+              <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                <div>
+                  <h3 className="text-sm font-bold text-amber-400">تقويم أحداث ومواعيد الفريق</h3>
+                  <p className="text-xs text-slate-400 mt-0.5">مواعيد التصوير والبروفات والاجتماعات</p>
+                </div>
+                <button
+                  onClick={() => setShowAddEventModal(!showAddEventModal)}
+                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
+                >
+                  <Plus className="w-4 h-4" /> إضافة موعد
+                </button>
+              </div>
+
+              {showAddEventModal && (
+                <form onSubmit={handleAddCalendarEvent} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <input
+                      type="text"
+                      required
+                      value={newEventTitle}
+                      onChange={(e) => setNewEventTitle(e.target.value)}
+                      placeholder="عنوان الحدث..."
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <input
+                      type="date"
+                      required
+                      value={newEventDate}
+                      onChange={(e) => setNewEventDate(e.target.value)}
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    />
+                    <select
+                      value={newEventColor}
+                      onChange={(e) => setNewEventColor(e.target.value)}
+                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                    >
+                      <option value="amber">أصفر (تصوير)</option>
+                      <option value="purple">بنفسجي (بروفات)</option>
+                      <option value="emerald">أخضر (اجتماعات)</option>
+                      <option value="blue">أزرق (مونتاج)</option>
+                      <option value="rose">أحمر (موعد نهائي)</option>
+                    </select>
+                  </div>
+                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                    حفظ الموعد
+                  </button>
+                </form>
+              )}
+
+              <div className="space-y-3">
+                {calendarEvents.map((ev) => (
+                  <div key={ev.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                    <div>
+                      <h4 className="text-xs font-bold text-slate-100">{ev.title}</h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5">التصنيف: {ev.category} • التاريخ: {ev.date}</p>
+                    </div>
+                    <button onClick={() => handleDeleteCalendarEvent(ev.id)} className="p-1.5 text-red-400 hover:bg-red-500/20 rounded">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* TAB: PROJECTS & ASSETS HUB (CURRENT PROJECTS DETAILS) */}
           {activeTab === 'assets' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               {!selectedProject ? (
                 <>
-                  <div className="flex justify-between items-center">
+                  <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-200">أعمال ومشاريع الفريق</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">اختر عملاً لفتح ملفاته وفيديوهاته أو أنشئ مجلد عمل جديد</p>
+                      <h3 className="text-sm font-bold text-slate-200">المشاريع القائمة حالياً في الاستوديو</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">تابع تفاصيل الحالة والميزانية وافتح مجلدات الملفات لكل مشروع</p>
                     </div>
                     <button
                       onClick={() => setShowAddProject(!showAddProject)}
-                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
                     >
-                      <FolderPlus className="w-4 h-4" /> {showAddProject ? 'إغلاق النموذج' : 'إضافة عمل جديد'}
+                      <FolderPlus className="w-4 h-4" /> إضافة مشروع جديد
                     </button>
                   </div>
 
                   {showAddProject && (
-                    <form onSubmit={handleAddProject} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4">
-                      <h4 className="text-xs font-bold text-amber-400">إنشاء مجلد عمل جديد في مكتبة الفريق</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                        <div>
-                          <label className="block text-slate-400 mb-1">اسم العمل / المشروع:</label>
-                          <input
-                            type="text"
-                            required
-                            value={newProjectTitle}
-                            onChange={(e) => setNewProjectTitle(e.target.value)}
-                            placeholder="مثال: فيلم المعزوفة / إعلان اليوم الوطني..."
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-slate-400 mb-1">وصف مختصر:</label>
-                          <input
-                            type="text"
-                            value={newProjectDesc}
-                            onChange={(e) => setNewProjectDesc(e.target.value)}
-                            placeholder="السيناريو، الفيديوهات، ومرفقات الإنتاج..."
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
+                    <form onSubmit={handleAddProject} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input
+                          type="text"
+                          required
+                          value={newProjectTitle}
+                          onChange={(e) => setNewProjectTitle(e.target.value)}
+                          placeholder="اسم المشروع..."
+                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                        />
+                        <select
+                          value={newProjectStatus}
+                          onChange={(e) => setNewProjectStatus(e.target.value)}
+                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                        >
+                          <option value="قيد التحضير والتطوير">قيد التحضير والتطوير</option>
+                          <option value="قيد التصوير">قيد التصوير</option>
+                          <option value="قيد المونتاج وما بعد الإنتاج">قيد المونتاج وما بعد الإنتاج</option>
+                          <option value="منجز وجاهز للعرض">منجز وجاهز للعرض</option>
+                        </select>
+                        <input
+                          type="text"
+                          value={newProjectBudget}
+                          onChange={(e) => setNewProjectBudget(e.target.value)}
+                          placeholder="الميزانية المرصودة (مثال: 20,000 ريال)"
+                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                        />
                       </div>
-                      <button
-                        type="submit"
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
-                      >
-                        إنشاء العمل في المكتبة
+                      <input
+                        type="text"
+                        value={newProjectDesc}
+                        onChange={(e) => setNewProjectDesc(e.target.value)}
+                        placeholder="وصف مختصر للمشروع والأهداف..."
+                        className="w-full bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                      />
+                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                        حفظ وإنشاء المشروع
                       </button>
                     </form>
                   )}
 
-                  {projects.length === 0 ? (
-                    <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                      لا يوجد أعمال مضافة حالياً. اضغط على "إضافة عمل جديد" لإنشاء أول مجلد عمل.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {projects.map((proj) => {
-                        const count = assets.filter((a) => a.projectId === proj.id).length;
-                        return (
-                          <div
-                            key={proj.id}
-                            onClick={() => setSelectedProjectId(proj.id)}
-                            className="bg-slate-900 hover:bg-slate-900/80 border border-slate-800 hover:border-amber-500/40 p-5 rounded-xl cursor-pointer transition-all flex flex-col justify-between space-y-4 group"
-                          >
-                            <div className="flex items-start justify-between">
-                              <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-                                <Folder className="w-6 h-6" />
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] bg-slate-950 text-slate-300 px-2.5 py-1 rounded-full border border-slate-800">
-                                  {count} ملفات
-                                </span>
-                                <button
-                                  onClick={(e) => handleDeleteProject(proj.id, e)}
-                                  className="p-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 transition-colors"
-                                  title="حذف العمل"
-                                >
-                                  <Trash2 className="w-3.5 h-3.5" />
-                                </button>
-                              </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {projects.map((proj) => {
+                      const count = assets.filter((a) => a.projectId === proj.id).length;
+                      return (
+                        <div
+                          key={proj.id}
+                          onClick={() => setSelectedProjectId(proj.id)}
+                          className="bg-slate-900 border border-slate-800 hover:border-amber-500/40 p-5 rounded-xl cursor-pointer transition-all space-y-4"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="w-11 h-11 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+                              <Folder className="w-6 h-6" />
                             </div>
-
-                            <div>
-                              <h4 className="text-sm font-bold text-slate-100 group-hover:text-amber-400 transition-colors">{proj.title}</h4>
-                              <p className="text-xs text-slate-400 mt-1 line-clamp-2">{proj.description}</p>
-                            </div>
-
-                            <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-500">
-                              <span>بواسطة: {proj.createdBy}</span>
-                              <span className="text-amber-400 font-bold">فتح المجلد ←</span>
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] bg-amber-500/20 text-amber-300 px-2.5 py-1 rounded-full font-bold">
+                                {proj.status || 'قيد العمل'}
+                              </span>
+                              <button onClick={(e) => handleDeleteProject(proj.id, e)} className="p-1.5 text-red-400 hover:bg-red-500/20 rounded">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
                             </div>
                           </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-100">{proj.title}</h4>
+                            <p className="text-xs text-slate-400 mt-1">{proj.description}</p>
+                          </div>
+                          <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-400">
+                            <span>الميزانية: <strong className="text-amber-400">{proj.budgetTotal || 'غير محدد'}</strong></span>
+                            <span>{count} ملفات • فتح المجلد ←</span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </>
               ) : (
                 <div className="space-y-6">
-                  <div className="flex flex-wrap justify-between items-center gap-3 bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                  <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                     <div className="flex items-center gap-3">
-                      <button
-                        onClick={() => {
-                          setSelectedProjectId(null);
-                          setShowAddAsset(false);
-                        }}
-                        className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-colors flex items-center gap-1 text-xs font-bold"
-                      >
-                        <ArrowRight className="w-4 h-4" /> رجوع للأعمال
+                      <button onClick={() => setSelectedProjectId(null)} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1">
+                        <ArrowRight className="w-4 h-4" /> رجوع للمشاريع
                       </button>
                       <div>
                         <h3 className="text-base font-bold text-amber-400">{selectedProject.title}</h3>
-                        <p className="text-xs text-slate-400">{selectedProject.description}</p>
+                        <p className="text-xs text-slate-400">الحالة: {selectedProject.status} • الميزانية: {selectedProject.budgetTotal}</p>
                       </div>
                     </div>
-
                     <button
                       onClick={() => setShowAddAsset(!showAddAsset)}
-                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-colors"
+                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
                     >
-                      <Plus className="w-4 h-4" /> {showAddAsset ? 'إغلاق النموذج' : 'إضافة ملف / فيديو'}
+                      <Plus className="w-4 h-4" /> {showAddAsset ? 'إغلاق' : 'إضافة ملف للمشروع'}
                     </button>
                   </div>
 
                   {showAddAsset && (
-                    <form onSubmit={handleAddAsset} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4">
-                      <h4 className="text-xs font-bold text-amber-400">إضافة ملف أو فيديو جديد داخل ({selectedProject.title})</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
-                        <div>
-                          <label className="block text-slate-400 mb-1">اسم الملف أو الفيديو:</label>
-                          <input
-                            type="text"
-                            required
-                            value={newAssetTitle}
-                            onChange={(e) => setNewAssetTitle(e.target.value)}
-                            placeholder="مثال: مونتاج مبدئي V1 / السيناريو.pdf"
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-slate-400 mb-1">نوع الملف:</label>
-                          <select
-                            value={newAssetCategory}
-                            onChange={(e) => setNewAssetCategory(e.target.value)}
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                          >
-                            <option value="video">فيديو (Video / Cut)</option>
-                            <option value="script">سيناريو (Script)</option>
-                            <option value="moodboard">لوحة إلهام / صور (Moodboard)</option>
-                            <option value="tech">مخطط تقني / كاميرات</option>
-                            <option value="other">ملف عام</option>
-                          </select>
-                        </div>
-                        <div>
-                          <label className="block text-slate-400 mb-1">رابط الملف أو الفيديو (Drive / Frame.io / YouTube):</label>
-                          <input
-                            type="url"
-                            value={newAssetUrl}
-                            onChange={(e) => setNewAssetUrl(e.target.value)}
-                            placeholder="https://drive.google.com/..."
-                            className="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg p-2.5 focus:outline-none focus:border-amber-500"
-                          />
-                        </div>
+                    <form onSubmit={handleAddAsset} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <input
+                          type="text"
+                          required
+                          value={newAssetTitle}
+                          onChange={(e) => setNewAssetTitle(e.target.value)}
+                          placeholder="اسم الملف / المجلد..."
+                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                        />
+                        <select
+                          value={newAssetCategory}
+                          onChange={(e) => setNewAssetCategory(e.target.value)}
+                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                        >
+                          <option value="video">فيديو وعروض</option>
+                          <option value="script">سيناريو</option>
+                          <option value="moodboard">لوحة بصرية / صور</option>
+                          <option value="other">ملف عام</option>
+                        </select>
+                        <input
+                          type="url"
+                          value={newAssetUrl}
+                          onChange={(e) => setNewAssetUrl(e.target.value)}
+                          placeholder="رابط السحابة (Drive / Frame.io)"
+                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                        />
                       </div>
-
-                      <button
-                        type="submit"
-                        className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl text-xs transition-colors"
-                      >
-                        حفظ وإضافة الملف للعمل
+                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                        حفظ الملف
                       </button>
                     </form>
                   )}
 
-                  {projectAssets.length === 0 ? (
-                    <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                      لا يوجد ملفات أو فيديوهات داخل هذا العمل حتى الآن. اضغط على "إضافة ملف / فيديو" للبدء.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      {projectAssets.map((asset) => (
-                        <div key={asset.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between space-y-3 relative">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {projectAssets.length === 0 ? (
+                      <div className="col-span-3 bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
+                        لا توجد ملفات مرفقة في هذا المشروع حالياً.
+                      </div>
+                    ) : (
+                      projectAssets.map((asset) => (
+                        <div key={asset.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between space-y-3">
                           <div className="flex items-start justify-between">
-                            {asset.category === 'video' ? (
-                              <Video className="w-8 h-8 text-amber-400" />
-                            ) : (
-                              <FileText className="w-8 h-8 text-amber-400" />
-                            )}
-                            <span className="text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800">
-                              {asset.category === 'video' ? 'فيديو' : asset.category === 'script' ? 'سيناريو' : 'ملف'}
-                            </span>
+                            <FileText className="w-8 h-8 text-amber-400" />
+                            <span className="text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded">{asset.category}</span>
                           </div>
                           <div>
-                            <h4 className="text-xs font-bold text-slate-200 mb-1">{asset.title}</h4>
-                            <p className="text-[11px] text-slate-400">بواسطة: {asset.updatedBy} ({asset.date})</p>
+                            <h4 className="text-xs font-bold text-slate-200">{asset.title}</h4>
+                            <p className="text-[11px] text-slate-400 mt-1">بواسطة: {asset.updatedBy}</p>
                           </div>
                           <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
-                            {asset.url ? (
+                            {asset.url && (
                               <a
                                 href={asset.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 border border-amber-500/30 text-xs font-bold py-2 rounded-lg transition-colors flex items-center justify-center gap-1.5"
+                                className="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1"
                               >
-                                <Eye className="w-3.5 h-3.5" /> فتح / مشاهدة
+                                <Eye className="w-3.5 h-3.5" /> فتح الرابط
                               </a>
-                            ) : (
-                              <span className="flex-1 bg-slate-800/60 text-slate-400 text-xs font-medium py-2 rounded-lg flex items-center justify-center gap-1.5">
-                                <LinkIcon className="w-3.5 h-3.5" /> بدون رابط
-                              </span>
                             )}
-                            <button
-                              onClick={() => handleDeleteAsset(asset.id)}
-                              className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg border border-red-500/20 transition-colors"
-                              title="حذف الملف"
-                            >
+                            <button onClick={() => handleDeleteAsset(asset.id)} className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  )}
+                      ))
+                    )}
+                  </div>
                 </div>
               )}
             </div>
           )}
 
+          {/* TAB: TEAM DIRECTORY */}
           {activeTab === 'team' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {allTeamMembers.map((member) => {
-                const hasCustomPass = Boolean(userPasswords[member.id]);
                 const online = isMemberOnline(member.id);
-                const isSelf = currentUser.id === member.id;
                 return (
                   <div key={member.id} className="bg-slate-900 border border-slate-800 p-5 rounded-xl flex flex-col justify-between space-y-4">
                     <div className="flex items-center space-x-3 space-x-reverse">
@@ -2522,34 +2847,13 @@ export default function App() {
                         <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 font-bold text-base">
                           {member.name.charAt(0)}
                         </div>
-                        <span
-                          className={`absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${
-                            online ? 'bg-emerald-400' : 'bg-slate-600'
-                          }`}
-                        ></span>
+                        <span className={`absolute -bottom-0.5 -left-0.5 w-3 h-3 rounded-full border-2 border-slate-900 ${online ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
                       </div>
                       <div className="flex-1">
-                        <div className="flex items-center gap-1.5">
-                          <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
-                          {member.isCustom && (
-                            <span className="text-[9px] px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                              جديد
-                            </span>
-                          )}
-                        </div>
+                        <h4 className="text-sm font-bold text-slate-200">{member.name}</h4>
                         <p className="text-xs text-amber-400 font-medium">{member.role}</p>
-                        <div className="mt-1 flex items-center gap-2 text-[10px]">
-                          <span className={`flex items-center gap-1 font-semibold ${online ? 'text-emerald-400' : 'text-slate-500'}`}>
-                            <span className={`w-2 h-2 rounded-full ${online ? 'bg-emerald-400' : 'bg-slate-600'}`}></span>
-                            <span>{online ? 'متواجد الآن' : 'غير متصل'}</span>
-                          </span>
-                          <span className={`px-1.5 py-0.2 rounded ${hasCustomPass ? 'bg-emerald-500/10 text-emerald-400' : 'bg-slate-800 text-slate-400'}`}>
-                            {hasCustomPass ? 'رمز خاص مفعّل' : 'رمز افتراضي'}
-                          </span>
-                        </div>
                       </div>
                     </div>
-
                     <div className="border-t border-slate-800 pt-3 space-y-2 text-xs text-slate-400">
                       <div className="flex items-center space-x-2 space-x-reverse">
                         <Phone className="w-3.5 h-3.5 text-amber-500" />
@@ -2559,52 +2863,21 @@ export default function App() {
                         <Mail className="w-3.5 h-3.5 text-amber-500" />
                         <span>{member.email}</span>
                       </div>
-
-                      {!isSelf && (
+                      {currentUser.id !== member.id && (
                         <button
                           onClick={() => handleStartDirectChat(member)}
-                          className="w-full mt-2 py-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 rounded-lg text-xs font-bold border border-amber-500/30 transition-colors flex items-center justify-center gap-1.5"
+                          className="w-full mt-2 py-2 bg-amber-500/15 hover:bg-amber-500/25 text-amber-400 rounded-lg text-xs font-bold border border-amber-500/30 flex items-center justify-center gap-1.5"
                         >
-                          <MessageCircle className="w-3.5 h-3.5" />
-                          <span>محادثة خاصة</span>
+                          <MessageCircle className="w-3.5 h-3.5" /> محادثة خاصة
                         </button>
                       )}
-
-                      {currentUser?.id === 'fahad' && (
+                      {isManagementUser && member.isCustom && (
                         <button
-                          onClick={() => {
-                            setEditingRoleMember(member);
-                            setNewRoleInput(member.role);
-                          }}
-                          className="w-full py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-400 rounded-lg text-xs font-bold border border-slate-700 transition-colors flex items-center justify-center gap-1.5"
+                          onClick={() => handleDeleteCustomMember(member.id)}
+                          className="w-full mt-1 py-1.5 bg-red-500/10 text-red-400 rounded-lg text-xs font-bold"
                         >
-                          <Edit3 className="w-3.5 h-3.5" />
-                          <span>تعديل الرتبة / القسم</span>
+                          حذف العضو
                         </button>
-                      )}
-
-                      {isManagementUser && (
-                        <div className="flex gap-1.5 pt-1">
-                          {hasCustomPass && (
-                            <button
-                              onClick={() => handleResetMemberPassword(member.id, member.name)}
-                              className="flex-1 py-1.5 bg-slate-800 hover:bg-amber-500/20 text-slate-300 hover:text-amber-400 rounded-lg text-[10px] font-medium border border-slate-700 transition-colors flex items-center justify-center gap-1"
-                            >
-                              <RotateCcw className="w-3 h-3" />
-                              <span>إعادة ضبط الرمز</span>
-                            </button>
-                          )}
-                          {member.isCustom && (
-                            <button
-                              onClick={() => handleDeleteCustomMember(member.id, member.name)}
-                              className="px-2.5 py-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg text-[10px] font-medium border border-red-500/20 transition-colors flex items-center justify-center gap-1"
-                              title="حذف العضو الجديد"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                              <span>حذف</span>
-                            </button>
-                          )}
-                        </div>
                       )}
                     </div>
                   </div>
@@ -2614,96 +2887,31 @@ export default function App() {
           )}
         </div>
 
-        {editingRoleMember && (
+        {/* MODALS */}
+        {showAddChannelModal && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
-                  <Shield className="w-4 h-4" /> تعديل رتبة {editingRoleMember.name}
-                </h3>
-                <button onClick={() => setEditingRoleMember(null)} className="text-slate-400 hover:text-slate-200">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSaveMemberRole} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-300 mb-1">المسمى الوظيفي أو الرتبة:</label>
-                  <input
-                    type="text"
-                    required
-                    value={newRoleInput}
-                    onChange={(e) => setNewRoleInput(e.target.value)}
-                    placeholder="مثال: Management Team | Head of Art"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    أضف <code className="text-amber-400">Management Team</code> لمنح العضو صلاحيات الإدارة الكاملة.
-                  </p>
-                </div>
-
+              <h3 className="font-bold text-amber-400 text-sm">إنشاء قسم أو غرفة جديدة</h3>
+              <form onSubmit={handleCreateCustomChannel} className="space-y-3 text-xs">
+                <input
+                  type="text"
+                  required
+                  value={newChanName}
+                  onChange={(e) => setNewChanName(e.target.value)}
+                  placeholder="اسم القسم..."
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5"
+                />
+                <input
+                  type="text"
+                  required
+                  value={newChanCode}
+                  onChange={(e) => setNewChanCode(e.target.value)}
+                  placeholder="رمز الحماية السري..."
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 font-mono"
+                />
                 <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingRoleMember(null)}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    حفظ الرتبة
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {editingChannelForPasscode && (
-          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
-                  <KeyRound className="w-4 h-4" /> تغيير رمز قسم {editingChannelForPasscode.name}
-                </h3>
-                <button onClick={() => setEditingChannelForPasscode(null)} className="text-slate-400 hover:text-slate-200">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleUpdateChannelPasscode} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-300 mb-1">الرمز السري الجديد:</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPasscodeInput}
-                    onChange={(e) => setNewPasscodeInput(e.target.value)}
-                    placeholder="مثال: 8888"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 font-mono text-center text-base"
-                  />
-                  <p className="text-[10px] text-amber-400/90 mt-1.5 leading-relaxed">
-                    ⚠️ تنبيه: بمجرد الحفظ، سيتطلب من الجميع (بمن فيهم الموجودون حالياً) إدخال الرمز الجديد للدخول مجدداً.
-                  </p>
-                </div>
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setEditingChannelForPasscode(null)}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    تحديث الرمز وإغلاق القسم
-                  </button>
+                  <button type="button" onClick={() => setShowAddChannelModal(false)} className="flex-1 bg-slate-800 text-slate-300 py-2 rounded-xl font-bold">إلغاء</button>
+                  <button type="submit" className="flex-1 bg-amber-500 text-slate-950 py-2 rounded-xl font-bold">إنشاء</button>
                 </div>
               </form>
             </div>
@@ -2713,211 +2921,36 @@ export default function App() {
         {showAddPollModal && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-md w-full space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
-                  <BarChart2 className="w-4 h-4" /> إنشاء تصويت جديد في القسم
-                </h3>
-                <button
-                  onClick={() => setShowAddPollModal(false)}
-                  className="text-slate-400 hover:text-slate-200"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
+              <h3 className="font-bold text-amber-400 text-sm">إنشاء تصويت جديد</h3>
               <form onSubmit={handleCreatePoll} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-300 mb-1">سؤال أو موضوع التصويت:</label>
-                  <input
-                    type="text"
-                    required
-                    value={newPollQuestion}
-                    onChange={(e) => setNewPollQuestion(e.target.value)}
-                    placeholder="مثال: أي وقت يناسبكم لبروفة المشهد القادم؟"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
+                <input
+                  type="text"
+                  required
+                  value={newPollQuestion}
+                  onChange={(e) => setNewPollQuestion(e.target.value)}
+                  placeholder="سؤال التصويت..."
+                  className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5"
+                />
                 <div className="space-y-2">
-                  <label className="block text-slate-300">خيارات التصويت:</label>
                   {newPollOptions.map((opt, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        type="text"
-                        required={index < 2}
-                        value={opt}
-                        onChange={(e) => {
-                          const updated = [...newPollOptions];
-                          updated[index] = e.target.value;
-                          setNewPollOptions(updated);
-                        }}
-                        placeholder={`الخيار ${index + 1}`}
-                        className="flex-1 bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2 focus:outline-none focus:border-amber-500"
-                      />
-                      {newPollOptions.length > 2 && (
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const updated = newPollOptions.filter((_, i) => i !== index);
-                            setNewPollOptions(updated);
-                          }}
-                          className="px-2.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-xl transition-colors"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
+                    <input
+                      key={index}
+                      type="text"
+                      required={index < 2}
+                      value={opt}
+                      onChange={(e) => {
+                        const updated = [...newPollOptions];
+                        updated[index] = e.target.value;
+                        setNewPollOptions(updated);
+                      }}
+                      placeholder={`الخيار ${index + 1}`}
+                      className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2"
+                    />
                   ))}
-
-                  {newPollOptions.length < 5 && (
-                    <button
-                      type="button"
-                      onClick={() => setNewPollOptions([...newPollOptions, ''])}
-                      className="text-amber-400 hover:underline font-bold text-[11px] pt-1"
-                    >
-                      + إضافة خيار آخر
-                    </button>
-                  )}
                 </div>
-
-                <div className="flex gap-2 pt-3 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddPollModal(false)}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    نشر التصويت الآن
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {showAddChannelModal && (
-          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
-                  <Shield className="w-4 h-4" /> إنشاء قسم أو غرفة جديدة
-                </h3>
-                <button
-                  onClick={() => setShowAddChannelModal(false)}
-                  className="text-slate-400 hover:text-slate-200"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleCreateCustomChannel} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-300 mb-1">اسم القسم الجديد:</label>
-                  <input
-                    type="text"
-                    required
-                    value={newChanName}
-                    onChange={(e) => setNewChanName(e.target.value)}
-                    placeholder="مثال: قسم الديكور الخاص..."
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 mb-1">رمز الدخول السري (Passcode):</label>
-                  <input
-                    type="text"
-                    required
-                    value={newChanCode}
-                    onChange={(e) => setNewChanCode(e.target.value)}
-                    placeholder="مثال: 7070"
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500 font-mono"
-                  />
-                </div>
-
                 <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowAddChannelModal(false)}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    إنشاء القسم فوراً
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {showChangePasswordModal && (
-          <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
-                  <KeyRound className="w-4 h-4" /> تغيير الرمز السري لحسابك
-                </h3>
-                <button
-                  onClick={() => setShowChangePasswordModal(false)}
-                  className="text-slate-400 hover:text-slate-200"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              <form onSubmit={handleSavePersonalPassword} className="space-y-3 text-xs">
-                <div>
-                  <label className="block text-slate-300 mb-1">الرمز السري الجديد:</label>
-                  <input
-                    type="password"
-                    required
-                    value={newPasswordInput}
-                    onChange={(e) => setNewPasswordInput(e.target.value)}
-                    placeholder="اكتب الرمز الجديد..."
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-slate-300 mb-1">تأكيد الرمز الجديد:</label>
-                  <input
-                    type="password"
-                    required
-                    value={confirmPasswordInput}
-                    onChange={(e) => setConfirmPasswordInput(e.target.value)}
-                    placeholder="أعد كتابة الرمز..."
-                    className="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-xl px-3 py-2.5 focus:outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                {passwordSetupError && (
-                  <p className="text-[11px] text-red-400 bg-red-500/10 border border-red-500/20 p-2 rounded-lg">
-                    {passwordSetupError}
-                  </p>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setShowChangePasswordModal(false)}
-                    className="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    إلغاء
-                  </button>
-                  <button
-                    type="submit"
-                    className="flex-1 bg-amber-500 hover:bg-amber-600 text-slate-950 py-2.5 rounded-xl font-bold transition-colors"
-                  >
-                    حفظ التغيير
-                  </button>
+                  <button type="button" onClick={() => setShowAddPollModal(false)} className="flex-1 bg-slate-800 text-slate-300 py-2 rounded-xl font-bold">إلغاء</button>
+                  <button type="submit" className="flex-1 bg-amber-500 text-slate-950 py-2 rounded-xl font-bold">نشر التصويت</button>
                 </div>
               </form>
             </div>
