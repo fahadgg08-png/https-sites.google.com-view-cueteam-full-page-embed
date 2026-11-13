@@ -214,9 +214,9 @@ export default function App() {
   const [newPollQuestion, setNewPollQuestion] = useState('');
   const [newPollOptions, setNewPollOptions] = useState(['', '']);
 
-  // New features states
+  // Project-specific Shot Lists state
   const [shotLists, setShotLists] = useState([
-    { id: 'sl_1', scene: 'المشهد 1', shotNum: '1', shotSize: 'Wide Shot (WS)', movement: 'Panning', lens: '35mm', description: 'لقطة تأسيسية لموقع التصوير عند الشروق', assignedTo: 'عبدالعزيز / طارق' }
+    { id: 'sl_1', projectId: 'proj_1', scene: 'المشهد 1', shotNum: '1', shotSize: 'Wide Shot (WS)', movement: 'Panning', lens: '35mm', description: 'لقطة تأسيسية لموقع التصوير عند الشروق', assignedTo: 'عبدالعزيز / طارق' }
   ]);
   const [showAddShotList, setShowAddShotList] = useState(false);
   const [newSlScene, setNewSlScene] = useState('');
@@ -290,6 +290,7 @@ export default function App() {
 
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
+  const [projectSubTab, setProjectSubTab] = useState('assets'); // 'assets' or 'shotlist'
   const [showAddProject, setShowAddProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
@@ -571,12 +572,13 @@ export default function App() {
     await updateGlobalStore({ customChannels: nextCustomChannels });
   };
 
-  // Handlers for New Features
+  // Handlers for Project-Specific Shot Lists
   const handleAddShotList = (e) => {
     e.preventDefault();
-    if (!newSlScene.trim() || !newSlNum.trim()) return;
+    if (!newSlScene.trim() || !newSlNum.trim() || !selectedProjectId) return;
     const item = {
-      id: 'sl_' + Date.now(),
+      id: 'sl_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4),
+      projectId: selectedProjectId,
       scene: newSlScene.trim(),
       shotNum: newSlNum.trim(),
       shotSize: newSlSize,
@@ -915,10 +917,12 @@ export default function App() {
     e.stopPropagation();
     const nextProjects = projects.filter((p) => p.id !== projId);
     const nextAssets = assets.filter((a) => a.projectId !== projId);
+    const nextShotLists = shotLists.filter((s) => s.projectId !== projId);
     setProjects(nextProjects);
     setAssets(nextAssets);
+    setShotLists(nextShotLists);
     if (selectedProjectId === projId) setSelectedProjectId(null);
-    updateGlobalStore({ projects: nextProjects, assets: nextAssets });
+    updateGlobalStore({ projects: nextProjects, assets: nextAssets, shotLists: nextShotLists });
   };
 
   const handleAddAsset = (e) => {
@@ -952,7 +956,7 @@ export default function App() {
 
   const handleSelectChannel = (channel) => {
     const currentPasscode = channel.code;
-    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === currentPasscode);
+    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === currentPasscode) || currentUser?.id === 'fahad' || isManagementUser;
 
     if (channel.private && !isUnlocked) {
       setPasscodeModalChannel(channel);
@@ -1016,6 +1020,12 @@ export default function App() {
     const nextMsgs = [...messages, newMsg];
     setMessages(nextMsgs);
     updateGlobalStore({ messages: nextMsgs });
+
+    // Send Email Notification simulation if Direct Message
+    if (activeChannel.startsWith('dm_') && dmPartner) {
+      setEmailNotificationLog(`📧 تم إرسال إشعار بريدي إلكتروني إلى (${dmPartner.email}) بخصوص الرسالة الجديدة في المحادثة الخاصة.`);
+      setTimeout(() => setEmailNotificationLog(''), 6000);
+    }
   };
 
   const handleDeleteMessage = (msgId) => {
@@ -1222,6 +1232,7 @@ export default function App() {
   const activeMembersInChannel = channelMembers[activeChannel] || [];
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const projectAssets = assets.filter((a) => a.projectId === selectedProjectId);
+  const projectShotLists = shotLists.filter((s) => s.projectId === selectedProjectId);
   const onlineCount = allTeamMembers.filter((m) => isMemberOnline(m.id)).length;
 
   if (pendingUser) {
@@ -1479,16 +1490,6 @@ export default function App() {
             </button>
 
             <button
-              onClick={() => { setActiveTab('shotlist'); setMobileSidebarOpen(false); }}
-              className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-                activeTab === 'shotlist' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
-              }`}
-            >
-              <Camera className="w-4 h-4" />
-              <span>مركز Shot List والستوري بورد</span>
-            </button>
-
-            <button
               onClick={() => { setActiveTab('cast'); setMobileSidebarOpen(false); }}
               className={`w-full flex items-center space-x-3 space-x-reverse px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 activeTab === 'cast' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
@@ -1535,7 +1536,7 @@ export default function App() {
               }`}
             >
               <Folder className="w-4 h-4" />
-              <span>مكتبة المشاريع القائمة</span>
+              <span>مكتبة المشاريع والـ Shot Lists</span>
             </button>
 
             <button
@@ -1589,12 +1590,11 @@ export default function App() {
             </button>
             <h2 className="font-bold text-slate-100 text-sm md:text-base truncate">
               {activeTab === 'chat' && (isDirectMessage && dmPartner ? `محادثة خاصة مع ${dmPartner.name}` : 'غرف التواصل ومهام الأقسام')}
-              {activeTab === 'shotlist' && 'مركز Shot List والستوري بورد (المخرج ومدير التصوير)'}
               {activeTab === 'cast' && 'دليل طاقم التمثيل والشخصيات'}
               {activeTab === 'budget' && 'نظام تتبع الميزانية والمصروفات'}
               {activeTab === 'calendar' && 'التقويم الملون وأحداث الفريق'}
               {activeTab === 'callsheet' && 'أجندة يوم التصوير والإحداثيات (Call Sheet)'}
-              {activeTab === 'assets' && 'مكتبة المشاريع القائمة حالياً'}
+              {activeTab === 'assets' && (!selectedProjectId ? 'مكتبة المشاريع وقوائم اللقطات (Shot Lists)' : `مشروع: ${selectedProject?.title}`)}
               {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد من ${allTeamMembers.length})`}
             </h2>
           </div>
@@ -1612,7 +1612,7 @@ export default function App() {
         </header>
 
         {emailNotificationLog && (
-          <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-xs text-amber-300 flex items-center gap-2">
+          <div className="bg-amber-500/15 border-b border-amber-500/30 px-4 py-2 text-xs text-amber-300 flex items-center gap-2 animate-pulse">
             <BellRing className="w-4 h-4 text-amber-400 flex-shrink-0" />
             <span>{emailNotificationLog}</span>
           </div>
@@ -1637,7 +1637,7 @@ export default function App() {
 
                 <div className="space-y-1">
                   {allChannels.map((channel) => {
-                    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === channel.code);
+                    const isUnlocked = !channel.private || (unlockedChannels[channel.id] === channel.code) || currentUser?.id === 'fahad' || isManagementUser;
                     const IconComponent = channel.icon || Hash;
                     const deptTasksCount = tasks.filter((t) => (t.channelId || 'general') === channel.id && t.status !== 'done').length;
                     const isCustomDept = channel.id.startsWith('dept_');
@@ -1742,7 +1742,7 @@ export default function App() {
                               {isMemberOnline(dmPartner.id) ? 'متواجد الآن' : 'غير متصل'}
                             </span>
                           </div>
-                          <p className="text-[11px] text-slate-400">{dmPartner.role}</p>
+                          <p className="text-[11px] text-slate-400">{dmPartner.role} • {dmPartner.email}</p>
                         </div>
                       </div>
                     ) : (
@@ -2099,117 +2099,6 @@ export default function App() {
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* TAB: SHOT LIST & STORYBOARD HUB */}
-          {activeTab === 'shotlist' && (
-            <div className="space-y-6 max-w-5xl mx-auto">
-              <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                <div>
-                  <h3 className="text-sm font-bold text-amber-400">مركز الـ Shot List والستوري بورد الموحد</h3>
-                  <p className="text-xs text-slate-400 mt-0.5">تنسيق مباشر بين المخرج ومدير التصوير لتحديد زوايا وحركات الكاميرا لكل مشهد</p>
-                </div>
-                <button
-                  onClick={() => setShowAddShotList(!showAddShotList)}
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
-                >
-                  <Plus className="w-4 h-4" /> {showAddShotList ? 'إغلاق النموذج' : 'إضافة لقطة جديدة (Shot)'}
-                </button>
-              </div>
-
-              {showAddShotList && (
-                <form onSubmit={handleAddShotList} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-                    <input
-                      type="text"
-                      required
-                      value={newSlScene}
-                      onChange={(e) => setNewSlScene(e.target.value)}
-                      placeholder="رقم / اسم المشهد (مثال: المشهد 2)"
-                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      required
-                      value={newSlNum}
-                      onChange={(e) => setNewSlNum(e.target.value)}
-                      placeholder="رقم اللقطة (مثال: Shot 3)"
-                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                    />
-                    <select
-                      value={newSlSize}
-                      onChange={(e) => setNewSlSize(e.target.value)}
-                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                    >
-                      <option value="Extreme Wide Shot (EWS)">Extreme Wide Shot (EWS)</option>
-                      <option value="Wide Shot (WS)">Wide Shot (WS)</option>
-                      <option value="Medium Shot (MS)">Medium Shot (MS)</option>
-                      <option value="Close Up (CU)">Close Up (CU)</option>
-                      <option value="Extreme Close Up (ECU)">Extreme Close Up (ECU)</option>
-                    </select>
-                    <input
-                      type="text"
-                      value={newSlMovement}
-                      onChange={(e) => setNewSlMovement(e.target.value)}
-                      placeholder="حركة الكاميرا (Panning / Tracking)"
-                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                    />
-                  </div>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <input
-                      type="text"
-                      value={newSlLens}
-                      onChange={(e) => setNewSlLens(e.target.value)}
-                      placeholder="العدسة المستخدمة (مثال: 35mm أو 85mm)"
-                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      value={newSlAssign}
-                      onChange={(e) => setNewSlAssign(e.target.value)}
-                      placeholder="المسؤول (المخرج / مدير التصوير)"
-                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                    />
-                    <input
-                      type="text"
-                      value={newSlDesc}
-                      onChange={(e) => setNewSlDesc(e.target.value)}
-                      placeholder="وصف الوصف وتكوين الكادر..."
-                      className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                    />
-                  </div>
-                  <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
-                    حفظ اللقطة في قائمة الـ Shot List
-                  </button>
-                </form>
-              )}
-
-              <div className="grid grid-cols-1 gap-3">
-                {shotLists.length === 0 ? (
-                  <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                    لا توجد لقطات مسجلة حتى الآن. ابدأ بإضافة اللقطات!
-                  </div>
-                ) : (
-                  shotLists.map((sl) => (
-                    <div key={sl.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between gap-4">
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-1 bg-amber-500/20 text-amber-400 rounded text-xs font-bold">{sl.scene} - لقطة {sl.shotNum}</span>
-                          <span className="text-xs font-semibold text-slate-200">{sl.shotSize}</span>
-                          <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">حركة: {sl.movement}</span>
-                          <span className="text-[11px] px-2 py-0.5 rounded bg-slate-950 text-amber-300">عدسة: {sl.lens}</span>
-                        </div>
-                        <p className="text-xs text-slate-400 mt-2">{sl.description}</p>
-                        <p className="text-[10px] text-slate-500 mt-1">بواسطة: {sl.assignedTo}</p>
-                      </div>
-                      <button onClick={() => handleDeleteShotList(sl.id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg">
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))
                 )}
               </div>
             </div>
@@ -2645,15 +2534,15 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: PROJECTS & ASSETS HUB (CURRENT PROJECTS DETAILS) */}
+          {/* TAB: PROJECTS & PROJECT-SPECIFIC SHOT LISTS HUB */}
           {activeTab === 'assets' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               {!selectedProject ? (
                 <>
                   <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-200">المشاريع القائمة حالياً في الاستوديو</h3>
-                      <p className="text-xs text-slate-400 mt-0.5">تابع تفاصيل الحالة والميزانية وافتح مجلدات الملفات لكل مشروع</p>
+                      <h3 className="text-sm font-bold text-slate-200">المشاريع القائمة حالياً وقوائم الـ Shot Lists الخاصة بكل عمل</h3>
+                      <p className="text-xs text-slate-400 mt-0.5">اضغط على أي مشروع لفتح ملفاته وقائمة اللقطات الخاصة به (تدعم أكثر من 100 لقطة)</p>
                     </div>
                     <button
                       onClick={() => setShowAddProject(!showAddProject)}
@@ -2671,7 +2560,7 @@ export default function App() {
                           required
                           value={newProjectTitle}
                           onChange={(e) => setNewProjectTitle(e.target.value)}
-                          placeholder="اسم المشروع..."
+                          placeholder="اسم المشروع / العمل..."
                           className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
                         />
                         <select
@@ -2707,11 +2596,12 @@ export default function App() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {projects.map((proj) => {
-                      const count = assets.filter((a) => a.projectId === proj.id).length;
+                      const assetCount = assets.filter((a) => a.projectId === proj.id).length;
+                      const shotCount = shotLists.filter((s) => s.projectId === proj.id).length;
                       return (
                         <div
                           key={proj.id}
-                          onClick={() => setSelectedProjectId(proj.id)}
+                          onClick={() => { setSelectedProjectId(proj.id); setProjectSubTab('assets'); }}
                           className="bg-slate-900 border border-slate-800 hover:border-amber-500/40 p-5 rounded-xl cursor-pointer transition-all space-y-4"
                         >
                           <div className="flex items-start justify-between">
@@ -2733,7 +2623,7 @@ export default function App() {
                           </div>
                           <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-[11px] text-slate-400">
                             <span>الميزانية: <strong className="text-amber-400">{proj.budgetTotal || 'غير محدد'}</strong></span>
-                            <span>{count} ملفات • فتح المجلد ←</span>
+                            <span className="text-amber-400 font-bold">{assetCount} ملفات • {shotCount} لقطة (Shot List) ←</span>
                           </div>
                         </div>
                       );
@@ -2742,7 +2632,7 @@ export default function App() {
                 </>
               ) : (
                 <div className="space-y-6">
-                  <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl gap-4">
                     <div className="flex items-center gap-3">
                       <button onClick={() => setSelectedProjectId(null)} className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl text-xs font-bold flex items-center gap-1">
                         <ArrowRight className="w-4 h-4" /> رجوع للمشاريع
@@ -2752,84 +2642,214 @@ export default function App() {
                         <p className="text-xs text-slate-400">الحالة: {selectedProject.status} • الميزانية: {selectedProject.budgetTotal}</p>
                       </div>
                     </div>
-                    <button
-                      onClick={() => setShowAddAsset(!showAddAsset)}
-                      className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-4 py-2 rounded-xl text-xs flex items-center gap-1.5"
-                    >
-                      <Plus className="w-4 h-4" /> {showAddAsset ? 'إغلاق' : 'إضافة ملف للمشروع'}
-                    </button>
-                  </div>
-
-                  {showAddAsset && (
-                    <form onSubmit={handleAddAsset} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <input
-                          type="text"
-                          required
-                          value={newAssetTitle}
-                          onChange={(e) => setNewAssetTitle(e.target.value)}
-                          placeholder="اسم الملف / المجلد..."
-                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                        />
-                        <select
-                          value={newAssetCategory}
-                          onChange={(e) => setNewAssetCategory(e.target.value)}
-                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                        >
-                          <option value="video">فيديو وعروض</option>
-                          <option value="script">سيناريو</option>
-                          <option value="moodboard">لوحة بصرية / صور</option>
-                          <option value="other">ملف عام</option>
-                        </select>
-                        <input
-                          type="url"
-                          value={newAssetUrl}
-                          onChange={(e) => setNewAssetUrl(e.target.value)}
-                          placeholder="رابط السحابة (Drive / Frame.io)"
-                          className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
-                        />
-                      </div>
-                      <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
-                        حفظ الملف
+                    <div className="flex items-center gap-2 bg-slate-950 p-1 rounded-xl border border-slate-800">
+                      <button
+                        onClick={() => setProjectSubTab('assets')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 ${projectSubTab === 'assets' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
+                      >
+                        <Folder className="w-3.5 h-3.5" /> ملفات المشروع ({projectAssets.length})
                       </button>
-                    </form>
-                  )}
-
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    {projectAssets.length === 0 ? (
-                      <div className="col-span-3 bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
-                        لا توجد ملفات مرفقة في هذا المشروع حالياً.
-                      </div>
-                    ) : (
-                      projectAssets.map((asset) => (
-                        <div key={asset.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between space-y-3">
-                          <div className="flex items-start justify-between">
-                            <FileText className="w-8 h-8 text-amber-400" />
-                            <span className="text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded">{asset.category}</span>
-                          </div>
-                          <div>
-                            <h4 className="text-xs font-bold text-slate-200">{asset.title}</h4>
-                            <p className="text-[11px] text-slate-400 mt-1">بواسطة: {asset.updatedBy}</p>
-                          </div>
-                          <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
-                            {asset.url && (
-                              <a
-                                href={asset.url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1"
-                              >
-                                <Eye className="w-3.5 h-3.5" /> فتح الرابط
-                              </a>
-                            )}
-                            <button onClick={() => handleDeleteAsset(asset.id)} className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg">
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        </div>
-                      ))
-                    )}
+                      <button
+                        onClick={() => setProjectSubTab('shotlist')}
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 ${projectSubTab === 'shotlist' ? 'bg-amber-500 text-slate-950' : 'text-slate-400 hover:text-slate-200'}`}
+                      >
+                        <Camera className="w-3.5 h-3.5" /> قائمة اللقطات Shot List ({projectShotLists.length})
+                      </button>
+                    </div>
                   </div>
+
+                  {projectSubTab === 'assets' ? (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-xs font-bold text-slate-300">مستندات وملفات هذا المشروع:</h4>
+                        <button
+                          onClick={() => setShowAddAsset(!showAddAsset)}
+                          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> إضافة ملف للمشروع
+                        </button>
+                      </div>
+
+                      {showAddAsset && (
+                        <form onSubmit={handleAddAsset} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input
+                              type="text"
+                              required
+                              value={newAssetTitle}
+                              onChange={(e) => setNewAssetTitle(e.target.value)}
+                              placeholder="اسم الملف / المجلد..."
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                            <select
+                              value={newAssetCategory}
+                              onChange={(e) => setNewAssetCategory(e.target.value)}
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            >
+                              <option value="video">فيديو وعروض</option>
+                              <option value="script">سيناريو</option>
+                              <option value="moodboard">لوحة بصرية / صور</option>
+                              <option value="other">ملف عام</option>
+                            </select>
+                            <input
+                              type="url"
+                              value={newAssetUrl}
+                              onChange={(e) => setNewAssetUrl(e.target.value)}
+                              placeholder="رابط السحابة (Drive / Frame.io)"
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                          </div>
+                          <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                            حفظ الملف
+                          </button>
+                        </form>
+                      )}
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {projectAssets.length === 0 ? (
+                          <div className="col-span-3 bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
+                            لا توجد ملفات مرفقة في هذا المشروع حالياً.
+                          </div>
+                        ) : (
+                          projectAssets.map((asset) => (
+                            <div key={asset.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex flex-col justify-between space-y-3">
+                              <div className="flex items-start justify-between">
+                                <FileText className="w-8 h-8 text-amber-400" />
+                                <span className="text-[10px] text-slate-400 bg-slate-950 px-2 py-0.5 rounded">{asset.category}</span>
+                              </div>
+                              <div>
+                                <h4 className="text-xs font-bold text-slate-200">{asset.title}</h4>
+                                <p className="text-[11px] text-slate-400 mt-1">بواسطة: {asset.updatedBy}</p>
+                              </div>
+                              <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+                                {asset.url && (
+                                  <a
+                                    href={asset.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex-1 bg-amber-500/20 hover:bg-amber-500/30 text-amber-400 text-xs font-bold py-2 rounded-lg flex items-center justify-center gap-1"
+                                  >
+                                    <Eye className="w-3.5 h-3.5" /> فتح الرابط
+                                  </a>
+                                )}
+                                <button onClick={() => handleDeleteAsset(asset.id)} className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg">
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <h4 className="text-xs font-bold text-slate-300">قائمة اللقطات الخاصة بهذا المشروع (تدعم أعداد كبيرة من اللقطات):</h4>
+                          <p className="text-[11px] text-slate-400">إجمالي اللقطات المسجلة لهذا العمل: <span className="text-amber-400 font-bold">{projectShotLists.length} لقطة</span></p>
+                        </div>
+                        <button
+                          onClick={() => setShowAddShotList(!showAddShotList)}
+                          className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-1.5"
+                        >
+                          <Plus className="w-3.5 h-3.5" /> إضافة لقطة جديدة (Shot)
+                        </button>
+                      </div>
+
+                      {showAddShotList && (
+                        <form onSubmit={handleAddShotList} className="bg-slate-900 border border-amber-500/30 p-5 rounded-2xl space-y-4 text-xs">
+                          <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+                            <input
+                              type="text"
+                              required
+                              value={newSlScene}
+                              onChange={(e) => setNewSlScene(e.target.value)}
+                              placeholder="رقم / اسم المشهد (مثال: المشهد 2)"
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                            <input
+                              type="text"
+                              required
+                              value={newSlNum}
+                              onChange={(e) => setNewSlNum(e.target.value)}
+                              placeholder="رقم اللقطة (مثال: Shot 105)"
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                            <select
+                              value={newSlSize}
+                              onChange={(e) => setNewSlSize(e.target.value)}
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            >
+                              <option value="Extreme Wide Shot (EWS)">Extreme Wide Shot (EWS)</option>
+                              <option value="Wide Shot (WS)">Wide Shot (WS)</option>
+                              <option value="Medium Shot (MS)">Medium Shot (MS)</option>
+                              <option value="Close Up (CU)">Close Up (CU)</option>
+                              <option value="Extreme Close Up (ECU)">Extreme Close Up (ECU)</option>
+                            </select>
+                            <input
+                              type="text"
+                              value={newSlMovement}
+                              onChange={(e) => setNewSlMovement(e.target.value)}
+                              placeholder="حركة الكاميرا (Panning / Tracking)"
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <input
+                              type="text"
+                              value={newSlLens}
+                              onChange={(e) => setNewSlLens(e.target.value)}
+                              placeholder="العدسة المستخدمة (مثال: 35mm أو 85mm)"
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                            <input
+                              type="text"
+                              value={newSlAssign}
+                              onChange={(e) => setNewSlAssign(e.target.value)}
+                              placeholder="المسؤول (المخرج / مدير التصوير)"
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                            <input
+                              type="text"
+                              value={newSlDesc}
+                              onChange={(e) => setNewSlDesc(e.target.value)}
+                              placeholder="وصف اللقطة وتكوين الكادر..."
+                              className="bg-slate-950 border border-slate-700 text-slate-200 p-2.5 rounded-lg"
+                            />
+                          </div>
+                          <button type="submit" className="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-2.5 rounded-xl">
+                            حفظ اللقطة في قائمة الـ Shot List الخاصة بالعمل
+                          </button>
+                        </form>
+                      )}
+
+                      <div className="grid grid-cols-1 gap-3 max-h-[600px] overflow-y-auto">
+                        {projectShotLists.length === 0 ? (
+                          <div className="bg-slate-900 border border-slate-800 p-8 rounded-xl text-center text-slate-500 text-xs">
+                            لا توجد لقطات مسجلة لهذا المشروع حتى الآن. أضف أول لقطة!
+                          </div>
+                        ) : (
+                          projectShotLists.map((sl) => (
+                            <div key={sl.id} className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between gap-4">
+                              <div>
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="px-2.5 py-1 bg-amber-500/20 text-amber-400 rounded text-xs font-bold">{sl.scene} - لقطة {sl.shotNum}</span>
+                                  <span className="text-xs font-semibold text-slate-200">{sl.shotSize}</span>
+                                  <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-300">حركة: {sl.movement}</span>
+                                  <span className="text-[11px] px-2 py-0.5 rounded bg-slate-950 text-amber-300">عدسة: {sl.lens}</span>
+                                </div>
+                                <p className="text-xs text-slate-400 mt-2">{sl.description}</p>
+                                <p className="text-[10px] text-slate-500 mt-1">بواسطة: {sl.assignedTo}</p>
+                              </div>
+                              <button onClick={() => handleDeleteShotList(sl.id)} className="p-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 rounded-lg flex-shrink-0">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
