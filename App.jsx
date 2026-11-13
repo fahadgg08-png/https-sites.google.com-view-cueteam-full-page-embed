@@ -39,7 +39,6 @@ import {
   Calendar as CalendarIcon,
   UserMinus,
   Menu,
-  ShieldPlus,
   BellRing,
   BarChart2,
   Image as ImageIcon,
@@ -166,7 +165,7 @@ export default function App() {
   const [loginError, setLoginError] = useState('');
 
   const [customMembers, setCustomMembers] = useState([]);
-  const [memberRoles, setMemberRoles] = useState({}); // لتخزين الرتب المحدثة للأعضاء
+  const [memberRoles, setMemberRoles] = useState({});
   const [editingRoleMember, setEditingRoleMember] = useState(null);
   const [newRoleInput, setNewRoleInput] = useState('');
 
@@ -194,14 +193,12 @@ export default function App() {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const [inputMessage, setInputMessage] = useState('');
-  const [imageAttachment, setImageAttachment] = useState(null); // لحفظ الصورة المرفقة مع الرسالة
+  const [imageAttachment, setImageAttachment] = useState(null);
 
-  // إدارة الرموز السرية للأقسام
   const [channelPasscodes, setChannelPasscodes] = useState({});
   const [editingChannelForPasscode, setEditingChannelForPasscode] = useState(null);
   const [newPasscodeInput, setNewPasscodeInput] = useState('');
 
-  // حالات التصويت (Polls)
   const [polls, setPolls] = useState([]);
   const [showAddPollModal, setShowAddPollModal] = useState(false);
   const [newPollQuestion, setNewPollQuestion] = useState('');
@@ -253,7 +250,6 @@ export default function App() {
   const [syncStatus, setSyncStatus] = useState('جاري الاتصال...');
   const [isCloudLoaded, setIsCloudLoaded] = useState(false);
 
-  // تخزين الأقسام المفتوحة مع الرمز المستخدم للتحقق من تغير الرمز السري
   const [unlockedChannels, setUnlockedChannels] = useState(() => {
     try {
       const saved = localStorage.getItem('cue_unlocked_channels_v2');
@@ -268,7 +264,6 @@ export default function App() {
   const [passcodeError, setPasscodeError] = useState('');
 
   const rawTeamMembers = [...INITIAL_TEAM_MEMBERS, ...customMembers];
-  // دمج الرتب المحدثة للأعضاء
   const allTeamMembers = rawTeamMembers.map((m) => ({
     ...m,
     role: memberRoles[m.id] !== undefined ? memberRoles[m.id] : m.role
@@ -452,7 +447,6 @@ export default function App() {
     await updateGlobalStore({ customChannels: nextCustomChannels });
   };
 
-  // تعديل الرمز السري للقسم (إلغاء قفل كل من هم داخله وإجبارهم على إدخال الرمز الجديد)
   const handleUpdateChannelPasscode = async (e) => {
     e.preventDefault();
     if (!editingChannelForPasscode || !newPasscodeInput.trim() || currentUser?.id !== 'fahad') return;
@@ -463,7 +457,6 @@ export default function App() {
     const nextPasscodes = { ...channelPasscodes, [chanId]: newCode };
     setChannelPasscodes(nextPasscodes);
 
-    // إزالة هذا القسم من الأقسام المفتوحة محلياً لإجبار الجميع على إعادة إدخال الرمز الجديد
     const nextUnlocked = { ...unlockedChannels };
     delete nextUnlocked[chanId];
     setUnlockedChannels(nextUnlocked);
@@ -475,7 +468,6 @@ export default function App() {
     alert(`تم تحديث الرمز السري لـ (${editingChannelForPasscode.name}) بنجاح. تم إغلاق القسم على المتواجدين لإدخال الرمز الجديد.`);
   };
 
-  // تعديل رتب العضو (خاص بفهد)
   const handleSaveMemberRole = async (e) => {
     e.preventDefault();
     if (!editingRoleMember || currentUser?.id !== 'fahad') return;
@@ -520,7 +512,6 @@ export default function App() {
     });
   };
 
-  // دوال التصويت (Polls)
   const handleCreatePoll = (e) => {
     e.preventDefault();
     if (!newPollQuestion.trim() || !currentUser) return;
@@ -807,7 +798,6 @@ export default function App() {
     }
   };
 
-  // معالجة اختيار صورة وإرفاقها
   const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -1462,7 +1452,7 @@ export default function App() {
                       onClick={() => setShowAddChannelModal(true)}
                       className="text-[10px] bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 px-2 py-1 rounded border border-amber-500/30 font-bold flex items-center gap-1"
                     >
-                      <ShieldPlus className="w-3 h-3" /> قسم جديد
+                      <Shield className="w-3 h-3" /> قسم جديد
                     </button>
                   )}
                 </div>
@@ -1499,7 +1489,6 @@ export default function App() {
                             </span>
                           )}
 
-                          {/* خيار تغيير الرمز السري للأقسام لفهد */}
                           {currentUser?.id === 'fahad' && channel.private && (
                             <button
                               type="button"
@@ -1800,7 +1789,6 @@ export default function App() {
                       )}
                     </div>
 
-                    {/* صندوق كتابة الرسائل والإضافات */}
                     {allChannels.find((c) => c.id === activeChannel)?.isNews && !isManagementUser ? (
                       <div className="p-3 border-t border-slate-800 bg-slate-950/80 text-center text-xs text-amber-400">
                         📢 هذا القسم للقراءة فقط (مخصص لنشر أخبار وتعاميم الفريق من الإدارة).
@@ -2626,7 +2614,6 @@ export default function App() {
           )}
         </div>
 
-        {/* Modal: تعديل رتبة العضو (خاص بفهد) */}
         {editingRoleMember && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
@@ -2675,7 +2662,6 @@ export default function App() {
           </div>
         )}
 
-        {/* Modal: تغيير الرمز السري للقسم (خاص بفهد) */}
         {editingChannelForPasscode && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
@@ -2819,7 +2805,7 @@ export default function App() {
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
               <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                 <h3 className="font-bold text-amber-400 text-sm flex items-center gap-1.5">
-                  <ShieldPlus className="w-4 h-4" /> إنشاء قسم أو غرفة جديدة
+                  <Shield className="w-4 h-4" /> إنشاء قسم أو غرفة جديدة
                 </h3>
                 <button
                   onClick={() => setShowAddChannelModal(false)}
