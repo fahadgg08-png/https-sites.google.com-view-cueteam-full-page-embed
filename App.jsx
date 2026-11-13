@@ -290,7 +290,7 @@ export default function App() {
 
   const [projects, setProjects] = useState(INITIAL_PROJECTS);
   const [selectedProjectId, setSelectedProjectId] = useState(null);
-  const [projectSubTab, setProjectSubTab] = useState('assets'); // 'assets' or 'shotlist'
+  const [projectSubTab, setProjectSubTab] = useState('assets');
   const [showAddProject, setShowAddProject] = useState(false);
   const [newProjectTitle, setNewProjectTitle] = useState('');
   const [newProjectDesc, setNewProjectDesc] = useState('');
@@ -480,20 +480,6 @@ export default function App() {
   const activeUserObj = allTeamMembers.find((m) => m.id === currentUser?.id) || currentUser;
   const isManagementUser = activeUserObj?.role?.includes('Management Team') || activeUserObj?.id === 'fahad';
 
-  const handleRemoveMemberFromChannel = async (memberId) => {
-    if (!isManagementUser || activeChannel.startsWith('dm_')) return;
-    const currentList = channelMembers[activeChannel] || [];
-    const updatedList = currentList.filter((m) => m.id !== memberId);
-    
-    const updatedChannelMembers = {
-      ...channelMembers,
-      [activeChannel]: updatedList
-    };
-
-    setChannelMembers(updatedChannelMembers);
-    await updateGlobalStore({ channelMembers: updatedChannelMembers });
-  };
-
   const handleCreateCustomChannel = async (e) => {
     e.preventDefault();
     if (!newChanName.trim() || !newChanCode.trim() || currentUser?.id !== 'fahad') return;
@@ -519,39 +505,6 @@ export default function App() {
     await updateGlobalStore({ customChannels: nextCustomChannels });
   };
 
-  const handleUpdateChannelPasscode = async (e) => {
-    e.preventDefault();
-    if (!editingChannelForPasscode || !newPasscodeInput.trim() || currentUser?.id !== 'fahad') return;
-
-    const chanId = editingChannelForPasscode.id;
-    const newCode = newPasscodeInput.trim();
-
-    const nextPasscodes = { ...channelPasscodes, [chanId]: newCode };
-    setChannelPasscodes(nextPasscodes);
-
-    const nextUnlocked = { ...unlockedChannels };
-    delete nextUnlocked[chanId];
-    setUnlockedChannels(nextUnlocked);
-
-    setEditingChannelForPasscode(null);
-    setNewPasscodeInput('');
-
-    await updateGlobalStore({ channelPasscodes: nextPasscodes });
-    alert(`تم تحديث الرمز السري لـ (${editingChannelForPasscode.name}) بنجاح.`);
-  };
-
-  const handleSaveMemberRole = async (e) => {
-    e.preventDefault();
-    if (!editingRoleMember || currentUser?.id !== 'fahad') return;
-
-    const nextRoles = { ...memberRoles, [editingRoleMember.id]: newRoleInput.trim() };
-    setMemberRoles(nextRoles);
-    setEditingRoleMember(null);
-    setNewRoleInput('');
-
-    await updateGlobalStore({ memberRoles: nextRoles });
-  };
-
   const handleDeleteCustomChannel = async (channelId, e) => {
     e.stopPropagation();
     if (currentUser?.id !== 'fahad') return;
@@ -572,7 +525,6 @@ export default function App() {
     await updateGlobalStore({ customChannels: nextCustomChannels });
   };
 
-  // Handlers for Project-Specific Shot Lists
   const handleAddShotList = (e) => {
     e.preventDefault();
     if (!newSlScene.trim() || !newSlNum.trim() || !selectedProjectId) return;
@@ -1021,17 +973,10 @@ export default function App() {
     setMessages(nextMsgs);
     updateGlobalStore({ messages: nextMsgs });
 
-    // Send Email Notification simulation if Direct Message
     if (activeChannel.startsWith('dm_') && dmPartner) {
       setEmailNotificationLog(`📧 تم إرسال إشعار بريدي إلكتروني إلى (${dmPartner.email}) بخصوص الرسالة الجديدة في المحادثة الخاصة.`);
       setTimeout(() => setEmailNotificationLog(''), 6000);
     }
-  };
-
-  const handleDeleteMessage = (msgId) => {
-    const nextMsgs = messages.filter((m) => m.id !== msgId);
-    setMessages(nextMsgs);
-    updateGlobalStore({ messages: nextMsgs });
   };
 
   const handleAddDeptTask = (e) => {
@@ -1189,15 +1134,6 @@ export default function App() {
     }
   };
 
-  const handleResetMemberPassword = async (memberId, memberName) => {
-    if (!isManagementUser) return;
-    const updatedPasswords = { ...userPasswords };
-    delete updatedPasswords[memberId];
-    setUserPasswords(updatedPasswords);
-    await updateGlobalStore({ userPasswords: updatedPasswords });
-    alert(`تمت إعادة ضبط رمز (${memberName}) للرمز الافتراضي.`);
-  };
-
   const handleLogout = async () => {
     if (currentUser) {
       const leavingId = currentUser.id;
@@ -1229,7 +1165,6 @@ export default function App() {
   const currentMessages = messages.filter((m) => m.channelId === activeChannel);
   const currentPolls = polls.filter((p) => p.channelId === activeChannel);
   const currentChannelTasks = tasks.filter((t) => (t.channelId || 'general') === activeChannel);
-  const activeMembersInChannel = channelMembers[activeChannel] || [];
   const selectedProject = projects.find((p) => p.id === selectedProjectId);
   const projectAssets = assets.filter((a) => a.projectId === selectedProjectId);
   const projectShotLists = shotLists.filter((s) => s.projectId === selectedProjectId);
@@ -1536,7 +1471,7 @@ export default function App() {
               }`}
             >
               <Folder className="w-4 h-4" />
-              <span>مكتبة المشاريع والـ Shot Lists</span>
+              <span>مشاريعنا</span>
             </button>
 
             <button
@@ -1594,7 +1529,7 @@ export default function App() {
               {activeTab === 'budget' && 'نظام تتبع الميزانية والمصروفات'}
               {activeTab === 'calendar' && 'التقويم الملون وأحداث الفريق'}
               {activeTab === 'callsheet' && 'أجندة يوم التصوير والإحداثيات (Call Sheet)'}
-              {activeTab === 'assets' && (!selectedProjectId ? 'مكتبة المشاريع وقوائم اللقطات (Shot Lists)' : `مشروع: ${selectedProject?.title}`)}
+              {activeTab === 'assets' && (!selectedProjectId ? 'مشاريعنا' : `مشروع: ${selectedProject?.title}`)}
               {activeTab === 'team' && `دليل أفراد تيم كيو (${onlineCount} متواجد من ${allTeamMembers.length})`}
             </h2>
           </div>
@@ -1619,7 +1554,6 @@ export default function App() {
         )}
 
         <div className="flex-1 overflow-auto p-3 md:p-6">
-          {/* TAB: CHAT & DEPARTMENTS */}
           {activeTab === 'chat' && (
             <div className="h-full flex flex-col md:flex-row gap-4">
               <div className="w-full md:w-64 bg-slate-900 border border-slate-800 rounded-xl p-3 flex flex-col gap-4 max-h-48 md:max-h-full overflow-y-auto">
@@ -1665,16 +1599,6 @@ export default function App() {
                             <span className={`text-[10px] px-1.5 py-0.5 rounded ${isUnlocked ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400 border border-red-500/20'}`}>
                               {isUnlocked ? 'مفتوح' : 'مشفر'}
                             </span>
-                          )}
-                          {currentUser?.id === 'fahad' && channel.private && (
-                            <button
-                              type="button"
-                              onClick={(e) => { e.stopPropagation(); setEditingChannelForPasscode(channel); setNewPasscodeInput(''); }}
-                              className="p-1 text-slate-400 hover:text-amber-400 rounded hover:bg-amber-500/15"
-                              title="تغيير الرمز السري"
-                            >
-                              <KeyRound className="w-3.5 h-3.5" />
-                            </button>
                           )}
                           {currentUser?.id === 'fahad' && isCustomDept && (
                             <button
@@ -1888,7 +1812,6 @@ export default function App() {
                     </div>
                   </>
                 ) : channelSubTab === 'props' && activeChannel === 'art' ? (
-                  /* PROPS & INVENTORY TRACKER INSIDE ART DEPT */
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     <div className="flex justify-between items-center bg-slate-950 p-3 rounded-xl border border-slate-800">
                       <div>
@@ -1980,7 +1903,6 @@ export default function App() {
                     </div>
                   </div>
                 ) : (
-                  /* TASKS TAB WITH DUE DATE, PRIORITY & ASSIGNEE */
                   <div className="flex-1 overflow-y-auto p-4 space-y-4">
                     <form onSubmit={handleAddDeptTask} className="bg-slate-950/80 border border-slate-800 p-3.5 rounded-xl space-y-3">
                       <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
@@ -2104,7 +2026,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: CAST & TALENT DIRECTORY */}
           {activeTab === 'cast' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
@@ -2198,7 +2119,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: BUDGET & EXPENSES */}
           {activeTab === 'budget' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
@@ -2290,7 +2210,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: CALL SHEET (WITH MAPS, PARKING & CHECK-IN) */}
           {activeTab === 'callsheet' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex justify-between items-center">
@@ -2466,7 +2385,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: CALENDAR */}
           {activeTab === 'calendar' && (
             <div className="space-y-6 max-w-4xl mx-auto">
               <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
@@ -2534,14 +2452,13 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: PROJECTS & PROJECT-SPECIFIC SHOT LISTS HUB */}
           {activeTab === 'assets' && (
             <div className="space-y-6 max-w-5xl mx-auto">
               {!selectedProject ? (
                 <>
                   <div className="flex justify-between items-center bg-slate-900 border border-slate-800 p-4 rounded-2xl">
                     <div>
-                      <h3 className="text-sm font-bold text-slate-200">المشاريع القائمة حالياً وقوائم الـ Shot Lists الخاصة بكل عمل</h3>
+                      <h3 className="text-sm font-bold text-slate-200">مشاريعنا</h3>
                       <p className="text-xs text-slate-400 mt-0.5">اضغط على أي مشروع لفتح ملفاته وقائمة اللقطات الخاصة به (تدعم أكثر من 100 لقطة)</p>
                     </div>
                     <button
@@ -2855,7 +2772,6 @@ export default function App() {
             </div>
           )}
 
-          {/* TAB: TEAM DIRECTORY */}
           {activeTab === 'team' && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {allTeamMembers.map((member) => {
@@ -2907,7 +2823,6 @@ export default function App() {
           )}
         </div>
 
-        {/* MODALS */}
         {showAddChannelModal && (
           <div className="absolute inset-0 bg-slate-950/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
             <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl max-w-sm w-full space-y-4">
