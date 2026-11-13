@@ -1,11 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { initializeApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, addDoc, deleteDoc, doc } from 'firebase/firestore';
+
+// --- (1) إعدادات Firebase ---
+const firebaseConfig = {
+  apiKey: "AIzaSyYourApiKeyHere",
+  authDomain: "team-cue.firebaseapp.com",
+  projectId: "team-cue",
+  storageBucket: "team-cue.appspot.com",
+  messagingSenderId: "123456789",
+  appId: "1:123456789:web:abcdef"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 export default function TeamCueApp() {
   const [currentView, setCurrentView] = useState('activeProjects'); // 'activeProjects' | 'archive' | 'productionDirs' | 'calendar' | 'managementBudget'
   const [selectedProject, setSelectedProject] = useState(null);
   const [activeTabInProject, setActiveTabInProject] = useState('script');
 
-  // قاعدة بيانات المشاريع
+  // قاعدة بيانات المشاريع والأعضاء (18 عضواً في الفريق)
+  const [members] = useState([
+    { id: 1, name: "فهد السعود", role: "مدير الفريق والمخرج" },
+    { id: 2, name: "محمد الدامر", role: "مطور المنصة والإنتاج" },
+    // ... بقية أعضاء الفريق الـ 18
+  ]);
+
   const [projects, setProjects] = useState([
     {
       id: 1,
